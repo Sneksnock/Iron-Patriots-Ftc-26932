@@ -19,14 +19,21 @@ public class Test_Pedro extends OpMode {
     private Timer pathTimer, actionTimer, opModeTimer;
 
     private int pathState;
-    private final Pose startPose = new Pose(0 ,0, Math.toRadians(0));
-    private final Pose scorePose = new Pose(0, .5, Math.toRadians(0));
+    private final Pose startPose = new Pose(20.6 ,121, Math.toRadians(135));
+    private final Pose scorePose = new Pose(69, 73, Math.toRadians(135));
+    private final Pose intake1Pose = new Pose(55,53, Math.toRadians(135));
     private PathChain grabPickup1;
 
     public void autonomousPathUpdate() {
         switch (pathState) {
             case 0:
                 follower.followPath(grabPickup1);
+                if(!follower.isBusy()){
+                    pathState = 1;
+                }
+
+                break;
+                //TODO: Add case :1
         }
     }
 
@@ -60,5 +67,6 @@ public class Test_Pedro extends OpMode {
                 .setLinearHeadingInterpolation(startPose.getHeading(), scorePose.getHeading())
                 .build();
 
+        //TODO: Add another path from scorePose to intake1Pose
     }
 }
