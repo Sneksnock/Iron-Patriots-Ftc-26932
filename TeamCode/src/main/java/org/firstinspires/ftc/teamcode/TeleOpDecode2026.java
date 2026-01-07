@@ -26,6 +26,8 @@ public class TeleOpDecode2026 extends LinearOpMode {
 
     private boolean slowModeToggle = false;
     private boolean slowMode = false;
+    private boolean LfToggle = false;
+    private boolean LfLoad = false;
 
     private boolean diverterToggle = false;
     private boolean diverterState = false;
@@ -94,15 +96,17 @@ public class TeleOpDecode2026 extends LinearOpMode {
                 slowModeToggle = false;
             }
 
-            // Diverter toggle (L1/R1)
-            if ((gamepad1.left_bumper || gamepad1.right_bumper) && !diverterToggle) {
-                diverterState = !diverterState;
-                diverterToggle = true;
-            } else if (!gamepad1.left_bumper && !gamepad1.right_bumper) {
-                diverterToggle = false;
+            // feeder toggle (L1/R1)
+            if (gamepad1.left_bumper){
+                left_feeder.setPower(1.0);
+            } else if (gamepad1.left_bumper){
+                left_feeder.setPower(0.0);
             }
-            diverter.setPosition(diverterState ? .58 : .15);
-            intake.setDirection(DcMotorSimple.Direction.REVERSE);
+            if (gamepad1.right_bumper){
+                right_feeder.setPower(1.0);
+            } else if (gamepad1.right_bumper){
+                right_feeder.setPower(0.0);
+            }
 
             // Firing sequence (triggers)
             if (!firing && gamepad1.left_trigger > 0.2) {
@@ -138,9 +142,9 @@ public class TeleOpDecode2026 extends LinearOpMode {
                 firing = false;
             }
 
-            // Drive logic (left stick = translation, right stick x = rotation)
-            double y = gamepad1.left_stick_y;  // Inverted Y
-            double x = -gamepad1.left_stick_x; // Inverted X
+
+            double y = gamepad1.left_stick_y;
+            double x = gamepad1.left_stick_x;
             double rx = gamepad1.right_stick_x;
 
             double heading = odo.getHeading(AngleUnit.RADIANS);
