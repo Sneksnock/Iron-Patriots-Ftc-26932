@@ -52,9 +52,11 @@ public class TeleOpDecode2026 extends LinearOpMode {
 
         odo = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
 
-        left_front_drive.setDirection(DcMotorSimple.Direction.REVERSE);
-        left_back_drive.setDirection(DcMotorSimple.Direction.REVERSE);
+        right_front_drive.setDirection(DcMotorSimple.Direction.REVERSE);
+        right_back_drive.setDirection(DcMotorSimple.Direction.REVERSE);
         right_launcher.setDirection(DcMotorSimple.Direction.REVERSE);
+        intake.setDirection(DcMotorSimple.Direction.REVERSE);
+
 
         waitForStart();
 

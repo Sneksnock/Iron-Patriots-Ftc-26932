@@ -320,7 +320,7 @@ public class Test_Pedro extends OpMode {
 
     // ---------------- HELPERS ----------------
     public boolean Schmovin() {
-        return Math.abs(follower.getHeadingError()) > .04 ||
+        return Math.abs(follower.getHeadingError()) > .09  ||
                 !follower.atParametricEnd() ||
                 follower.getVelocity().getMagnitude() > 0.3 ||
                 Math.abs(follower.getAngularVelocity()) > .05;
