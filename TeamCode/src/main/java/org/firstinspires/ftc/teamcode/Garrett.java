@@ -14,7 +14,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import java.util.Locale;
 
-@Autonomous(name ="Blue Side", group = "LinearOpMode")
+@Autonomous(name ="Blue Side", group = "Examples")
 public class Garrett extends LinearOpMode {
     GoBildaPinpointDriver odo;
     DcMotorEx Lf;
@@ -27,7 +27,8 @@ public class Garrett extends LinearOpMode {
     CRServo Lfeeder;
     CRServo Rfeeder;
     Servo Di;
-
+    private static final double CLOSE_VELOCITY =1100;
+    private static final double VELOCITY_TOLERANCE = 25;
     @Override
     public void runOpMode() {
         odo = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
@@ -46,22 +47,25 @@ public class Garrett extends LinearOpMode {
         odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD);
         odo.resetPosAndIMU();
 
-        Rf.setDirection(DcMotorSimple.Direction.REVERSE);
-        Rb.setDirection(DcMotorSimple.Direction.REVERSE);
+        Lf.setDirection(DcMotorSimple.Direction.REVERSE);
+        Lb.setDirection(DcMotorSimple.Direction.REVERSE);
         //Acutal Auton // Preloaded shots
         waitForStart();
-        RotateClockwise(360);
-     /* 1. move backwards into firing pos */ //moveBackward(30);
-     /* 2. Fire two balls using close fire */ //Cf();
-     /* 3. intake third ball*/ //intake.setPower(-1);
-     //sleep(3000);
-     /* 4. Fire third ball */ //Cf();
-     /* 5. rotate 135 degrees, current pos = 45  */
+        /*1. move backwards into firing pos */ moveBackward(30);
+        /*2. Fire two balls using close fire */ try {
+            shootAll();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        /* 3. intake third ball*/ intake.setPower(-1);
+        sleep(3000);
+
 
 
     }
 
-    //Move Forwards
+    //Move Forward
     public void moveForward(double distance) {
         odo.update();
 
@@ -130,7 +134,7 @@ public class Garrett extends LinearOpMode {
         Lb.setPower(-.75);
         Rb.setPower(.75);
 
-        while (opModeIsActive() && ( movedDistance) < distance) {
+        while (opModeIsActive() && (movedDistance) < distance) {
             odo.update();
             movedDistance = odo.getPosY(DistanceUnit.INCH) - startDistance;
         }
@@ -145,6 +149,7 @@ public class Garrett extends LinearOpMode {
         Lb.setPower(0);
         Rb.setPower(0);
     }
+
     //Move RIGHT
     public void moveRight(double distance) {
         odo.update();
@@ -172,10 +177,54 @@ public class Garrett extends LinearOpMode {
         Lb.setPower(0);
         Rb.setPower(0);
     }
-    public void Ff(){
+    public void shootAll() throws InterruptedException {
+        Rsh.setVelocity(CLOSE_VELOCITY);
+        Lsh.setVelocity(CLOSE_VELOCITY);
+        intake.setPower(0.6);
+        boolean atSpeed = false;
+
+        //This loop is constantly asking the robot If it has reached the correct speed, if the robot hasn't then it does nothing.
+        while(atSpeed == false) {
+            atSpeed = Math.abs(Lsh.getVelocity() - CLOSE_VELOCITY) <= VELOCITY_TOLERANCE &&
+                    Math.abs(Rsh.getVelocity() - CLOSE_VELOCITY) <= VELOCITY_TOLERANCE;
+            telemetry.addData("Left shooter velocity:", Lsh.getVelocity());
+            telemetry.addData("Right shooter velocity:", Rsh.getVelocity());
+            telemetry.addData("firing true", atSpeed);
+            telemetry.update();
+           sleep(100);
+        }
+
+        Lfeeder.setPower(1.0);
+        sleep(1600);
+
+        //Stop to keep the second ball from coming up
+        Lfeeder.setPower(0);
+
+        //Wait for the flywheel to get up to speed
+        sleep(500);
+
+        //Shoot the first ball on the left
+        Rfeeder.setPower(1.0);
+        sleep(2000); //Change if super servo
+        Rfeeder.setPower(0);
+
+        sleep(500);
+
+        Lfeeder.setPower(1.0);
+        sleep(1600);
+        Lfeeder.setPower(0.0);
+
+        sleep(500);
+
+        Rfeeder.setPower(1.0);
+        sleep(2000); //Change if super servo
+        Rfeeder.setPower(0.0);
+    }
+/*
+    public void Ff() {
         Lsh.setPower(1.5);
-         Rsh.setPower(-1.5);
-         sleep(250);
+        Rsh.setPower(-1.5);
+        sleep(250);
         Lfeeder.setPower(1);
         Rfeeder.setPower(-1);
         sleep(3000);
@@ -189,8 +238,11 @@ public class Garrett extends LinearOpMode {
         Rsh.setPower(0);
         Lfeeder.setPower(0);
         Rfeeder.setPower(0);
-    }
-    public void Cf() {
+        }
+ */
+
+
+    /* public void Cf() {
         Lsh.setPower(.54);
         Rsh.setPower(-.54);
         sleep(1650);
@@ -202,15 +254,16 @@ public class Garrett extends LinearOpMode {
         Rsh.setVelocity(-.1);
         Lfeeder.setPower(.1);
         Rfeeder.setPower(.1);
-        sleep(500);*/
-    }
+        sleep(500);
+    } */
+
     //rotate clockwise
     public void RotateClockwise(double distance) {
         odo.update();
 
         double startDistance = odo.getPosX(DistanceUnit.INCH);
         double movedDistance = 0;
-        double movedDegrees =  0;
+        double movedDegrees = 0;
 
         Lf.setPower(-.75);
         Rf.setPower(.75);
@@ -220,9 +273,9 @@ public class Garrett extends LinearOpMode {
         while (opModeIsActive() && (movedDegrees) < distance) {
             odo.update();
             movedDistance = odo.getPosX(DistanceUnit.INCH) - startDistance;
-            movedDegrees =  movedDistance/(2*Math.PI*6.456)*360;
-            telemetry.addData("MovedDistance",movedDistance);
-            telemetry.addData("MovedDeg",movedDegrees);
+            movedDegrees = movedDistance / (2 * Math.PI * 6.456) * 360;
+            telemetry.addData("MovedDistance", movedDistance);
+            telemetry.addData("MovedDeg", movedDegrees);
             telemetry.update();
         }
         //Brakes
@@ -237,5 +290,6 @@ public class Garrett extends LinearOpMode {
         Rb.setPower(0);
     }
 }
+
 
 
