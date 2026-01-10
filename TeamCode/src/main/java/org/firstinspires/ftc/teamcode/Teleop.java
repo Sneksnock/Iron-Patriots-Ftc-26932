@@ -95,7 +95,7 @@ public class Teleop extends LinearOpMode {
 
         waitForStart();
 
-        odo.resetPosAndIMU();
+       /* odo.resetPosAndIMU();
         Pose2D startingPositon = new Pose2D(DistanceUnit.INCH, 22.583, 60.082, AngleUnit.RADIANS, 2.566);
         odo.setPosition(startingPositon);
 
@@ -134,8 +134,8 @@ public class Teleop extends LinearOpMode {
             telemetry.addData("Pedro Heading Deg", Math.toDegrees(currentPose.getHeading()));
             telemetry.addData("ballingOut", ballingOut);
             telemetry.addData("follower busy", follower.isBusy());
-            telemetry.update();
-        }
+            telemetry.update();*/
+
     }
 
     public void shootAll() {
@@ -188,8 +188,12 @@ public class Teleop extends LinearOpMode {
         double strafe = -gamepad1.left_stick_y;
         double rotate = gamepad1.right_stick_x;
 
+        if(gamepad1.left_trigger >= .02){
+            shootAll();
+        }
+
         if (gamepad1.optionsWasPressed()) {
-            odo.resetPosAndIMU();
+            odo.recalibrateIMU();
         }
 
         Pose2D pos = odo.getPosition();
