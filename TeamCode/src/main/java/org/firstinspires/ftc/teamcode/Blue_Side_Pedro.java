@@ -11,11 +11,10 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
-
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Autonomous(name = "Blue(Pedro)", group = "Examples")
-public class Test_Pedro extends OpMode {
+public class Blue_Side_Pedro extends OpMode {
 
     // ---------------- HARDWARE ----------------
     private Follower follower;
@@ -32,35 +31,41 @@ public class Test_Pedro extends OpMode {
     private int pathState = 0;
 
     // ---------------- POSES ----------------
-    private final Pose startPose = new Pose(20.6, 121, Math.toRadians(135));
-    private final Pose scorePose = new Pose(69, 73, Math.toRadians(135));
-    private final Pose intake2Pose = new Pose(55, 53, Math.toRadians(180));
-    private final Pose intake3OutsidePose = new Pose(23, 86, Math.toRadians(180));
-    private final Pose intake4Pose = new Pose(29, 60.5, Math.toRadians(180));
-    private final Pose intake5OutsidePose = new Pose(24, 63, Math.toRadians(180));
-    private final Pose intake6Pose = new Pose(18, 60, Math.toRadians(180));
-    private final Pose intake7outsidePose = new Pose(29, 39, Math.toRadians(180));
-    private final Pose intake9Pose = new Pose(16, 36, Math.toRadians(180));
-    private final Pose leverPose = new Pose(19, 72, Math.toRadians(90));
+    private final Pose startPose = new Pose(33.916, 126.968, (2.4196));
+    private final Pose scorePose = new Pose(71, 80.281, (2.3));
+    private final Pose line1Pre =  new Pose(45,78, 3.070);
+    private final Pose intake2Pose = new Pose(35, 86, (3.070));
+    private final Pose intake3OutsidePose = new Pose(30, 88, (3.070));
+    private final Pose line2pre = new Pose(47.153, 61.445, 3.070);
+    private final Pose intake4Pose = new Pose(29, 60.5, (3.070));
+    private final Pose intake5OutsidePose = new Pose(24, 63, (3.070));
+    private final Pose intake6Pose = new Pose(18, 60, Math.toRadians(3.070));
+    private final Pose line3pre = new Pose(43.750, 41.227, 3.070);
+    private final Pose intake7outsidePose = new Pose(29, 39, Math.toRadians(3.070));
+    private final Pose intake9Pose = new Pose(16, 36, Math.toRadians(3.070));
+    private final Pose leverPose = new Pose(22.583, 60.082, (2.566));
 
 
     // ---------------- PATHS ----------------
     private PathChain score1;
+    private PathChain l1Pos;
     private PathChain intakeL12;
     private PathChain intakeL13;
     private PathChain score2;
+    private PathChain l2Pos;
     private PathChain intakeL21;
     private PathChain intakeL22;
     private PathChain intakeL23;
     private PathChain score3;
+    private PathChain l3Pos;
     private PathChain intakeL31;
     private PathChain intakeL33;
     private PathChain score4;
     private PathChain lever;
 
     // ---------------- SHOOTER CONSTANTS ----------------
-    private static final double CLOSE_VELOCITY = 1150;
-    private static final double VELOCITY_TOLERANCE = 75;
+    private static final double CLOSE_VELOCITY =1100;
+    private static final double VELOCITY_TOLERANCE = 25;
     private static final long PULSE_TIME_MS = 250;
     private static final long PULSE_GAP_MS = 150;
 
@@ -126,95 +131,117 @@ public class Test_Pedro extends OpMode {
                     pathState = 1;
                 }
                 break;
-
             case 1:
-                intake.setPower(1.0);
-                follower.followPath(intakeL12);
+                intake.setPower(.75);
+                follower.followPath(l1Pos);
                 if (!Schmovin()) {
                     pathState = 2;
                 }
                 break;
-
             case 2:
-                intake.setPower(1.0);
-                follower.followPath(intakeL13);
+                intake.setPower(.75);
+                follower.followPath(intakeL12);
                 if (!Schmovin()) {
                     pathState = 3;
                 }
                 break;
 
-            case 3:
-                intake.setPower(0);
-                follower.followPath(score2);
+           case 3:
+                intake.setPower(.75);
+                follower.followPath(intakeL13);
                 if (!Schmovin()) {
-                    shootAll();
                     pathState = 4;
                 }
                 break;
 
             case 4:
-                intake.setPower(1.0);
-                follower.followPath(intakeL21);
+                intake.setPower(0.0);
+                follower.followPath(score2);
                 if (!Schmovin()) {
+                    shootAll();
                     pathState = 5;
                 }
                 break;
 
             case 5:
-                intake.setPower(1.0);
-                follower.followPath(intakeL22);
+                intake.setPower(.75);
+                follower.followPath(lever);
+                shootAll();
                 if (!Schmovin()) {
+
                     pathState = 6;
                 }
-                break;
+              /*  break;
+            case 5:
+            follower.followPath(l2Pos);
+            if (!Schmovin()) {
+                pathState = 6;
+            }
 
             case 6:
                 intake.setPower(1.0);
-                follower.followPath(intakeL23);
+                follower.followPath(intakeL21);
                 if (!Schmovin()) {
                     pathState = 7;
                 }
                 break;
 
             case 7:
-                intake.setPower(0);
-                follower.followPath(score3);
+                intake.setPower(1.0);
+                follower.followPath(intakeL22);
                 if (!Schmovin()) {
-                    shootAll();
                     pathState = 8;
                 }
                 break;
 
             case 8:
                 intake.setPower(1.0);
-                follower.followPath(intakeL31);
+                follower.followPath(intakeL23);
                 if (!Schmovin()) {
                     pathState = 9;
                 }
                 break;
+
             case 9:
-                intake.setPower(1.0);
-                follower.followPath(intakeL33);
+                intake.setPower(0);
+                follower.followPath(score3);
                 if (!Schmovin()) {
+                    shootAll();
                     pathState = 10;
                 }
                 break;
 
-            case 10:
-                intake.setPower(0);
-                follower.followPath(score4);
+            case 11:
+                follower.followPath(l3Pos);
                 if (!Schmovin()) {
-                    shootAll();
                     pathState = 11;
                 }
-                break;
 
-            case 11:
-                follower.followPath(lever);
+            case 12:
+                intake.setPower(1.0);
+                follower.followPath(intakeL31);
                 if (!Schmovin()) {
                     pathState = 12;
                 }
                 break;
+            case 13:
+                intake.setPower(1.0);
+                follower.followPath(intakeL33);
+                if (!Schmovin()) {
+                    pathState = 13;
+                }
+                break;
+
+            case 14:
+                intake.setPower(0);
+                follower.followPath(score4);
+                if (!Schmovin()) {
+                    shootAll();
+                    pathState = 14;
+                }
+                break;
+
+             */
         }
     }
 
@@ -233,59 +260,17 @@ public class Test_Pedro extends OpMode {
 
     }
 
-    private void updatePulseShooter() {
-        if (!shooting) return;
-
-
-        double lv = Lsh.getVelocity();
-        double rv = Rsh.getVelocity();
-
-        boolean atSpeed = Math.abs(lv - CLOSE_VELOCITY) <= VELOCITY_TOLERANCE &&
-                        Math.abs(rv - CLOSE_VELOCITY) <= VELOCITY_TOLERANCE;
-
-        if (!atSpeed) return;
-
-        long now = System.currentTimeMillis();
-
-        if (!pulsing) {
-            pulsing = true;
-            pulseStartTime = now;
-
-            if (pulsePattern[pulseIndex] == 0) {
-                Rfeeder.setPower(1.0);   // Purple
-            } else {
-                Lfeeder.setPower(1.0);   // Green
-            }
-        }
-
-        if (pulsing && now - pulseStartTime >= PULSE_TIME_MS) {
-            Lfeeder.setPower(0);
-            Rfeeder.setPower(0);
-            pulsing = false;
-            pulseIndex++;
-
-            if (pulseIndex >= pulsePattern.length) {
-                Lsh.setVelocity(0);
-                Rsh.setVelocity(0);
-                shooting = false;
-            } else {
-                pulseStartTime = now + PULSE_GAP_MS;
-            }
-        }
-    }
-
     // ---------------- FIRING MOTIFS ----------------
     // 0 = Purple (Right), 1 = Green (Left)
 
     public void shootAll() throws InterruptedException {
         Rsh.setVelocity(CLOSE_VELOCITY);
         Lsh.setVelocity(CLOSE_VELOCITY);
+        intake.setPower(0.6);
         boolean atSpeed = false;
 
-        /*
         //This loop is constantly asking the robot If it has reached the correct speed, if the robot hasn't then it does nothing.
-        while(atSpeed == false){
-            i++;
+        while(atSpeed == false) {
             atSpeed = Math.abs(Lsh.getVelocity() - CLOSE_VELOCITY) <= VELOCITY_TOLERANCE &&
                     Math.abs(Rsh.getVelocity() - CLOSE_VELOCITY) <= VELOCITY_TOLERANCE;
             telemetry.addData("Left shooter velocity:", Lsh.getVelocity());
@@ -293,17 +278,33 @@ public class Test_Pedro extends OpMode {
             telemetry.addData("firing true", atSpeed);
             telemetry.update();
             Thread.sleep(100);
-        }*/
-        Thread.sleep(2000);
+        }
+
         Lfeeder.setPower(1.0);
-        Thread.sleep(750);
-        Rfeeder.setPower(1.0);
-        Thread.sleep(500);
-        intake.setPower(.5);
-        Thread.sleep(3000);
+        Thread.sleep(1600);
+
+        //Stop to keep the second ball from coming up
         Lfeeder.setPower(0);
+
+        //Wait for the flywheel to get up to speed
+        Thread.sleep(500);
+
+        //Shoot the first ball on the left
+        Rfeeder.setPower(1.0);
+        Thread.sleep(2000); //Change if super servo
         Rfeeder.setPower(0);
-        intake.setPower(.5);
+
+        Thread.sleep(500);
+
+        Lfeeder.setPower(1.0);
+        Thread.sleep(1600);
+        Lfeeder.setPower(0.0);
+
+        Thread.sleep(500);
+
+        Rfeeder.setPower(1.0);
+        Thread.sleep(2000); //Change if super servo
+        Rfeeder.setPower(0.0);
     }
 
     public void shootPPG() {
@@ -320,10 +321,10 @@ public class Test_Pedro extends OpMode {
 
     // ---------------- HELPERS ----------------
     public boolean Schmovin() {
-        return Math.abs(follower.getHeadingError()) > .09  ||
+        return Math.abs(follower.getHeadingError()) > .98 ||
                 !follower.atParametricEnd() ||
-                follower.getVelocity().getMagnitude() > 0.3 ||
-                Math.abs(follower.getAngularVelocity()) > .05;
+                follower.getVelocity().getMagnitude() > 0.90 ||
+                Math.abs(follower.getAngularVelocity()) > .90;
     }
 
     // ---------------- PATH BUILDER ----------------
@@ -333,10 +334,14 @@ public class Test_Pedro extends OpMode {
                 .addPath(new BezierLine(startPose, scorePose))
                 .setLinearHeadingInterpolation(startPose.getHeading(), scorePose.getHeading())
                 .build();
+        l1Pos = follower.pathBuilder()
+                .addPath(new BezierLine(scorePose, line1Pre))
+                .setLinearHeadingInterpolation(scorePose.getHeading(), line1Pre.getHeading())
+                .build();
 
         intakeL12 = follower.pathBuilder()
-                .addPath(new BezierLine(scorePose, intake2Pose))
-                .setLinearHeadingInterpolation(scorePose.getHeading(), intake2Pose.getHeading())
+                .addPath(new BezierLine(line1Pre, intake2Pose))
+                .setLinearHeadingInterpolation(line1Pre.getHeading(), intake2Pose.getHeading())
                 .build();
 
         intakeL13 = follower.pathBuilder()
@@ -347,6 +352,10 @@ public class Test_Pedro extends OpMode {
         score2 = follower.pathBuilder()
                 .addPath(new BezierLine(intake3OutsidePose, scorePose))
                 .setLinearHeadingInterpolation(intake3OutsidePose.getHeading(), scorePose.getHeading())
+                .build();
+        l2Pos = follower.pathBuilder()
+                .addPath(new BezierLine(scorePose, line2pre))
+                .setLinearHeadingInterpolation(scorePose.getHeading(), line2pre.getHeading())
                 .build();
 
         intakeL21 = follower.pathBuilder()
@@ -367,6 +376,10 @@ public class Test_Pedro extends OpMode {
         score3 = follower.pathBuilder()
                 .addPath(new BezierLine(intake6Pose, scorePose))
                 .setLinearHeadingInterpolation(intake6Pose.getHeading(), scorePose.getHeading())
+                .build();
+        l3Pos = follower.pathBuilder()
+                .addPath(new BezierLine(scorePose, line3pre))
+                .setLinearHeadingInterpolation(scorePose.getHeading(), line3pre.getHeading())
                 .build();
         intakeL31 = follower.pathBuilder()
                 .addPath(new BezierLine(scorePose, intake7outsidePose))

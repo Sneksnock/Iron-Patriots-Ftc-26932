@@ -14,7 +14,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import java.util.Locale;
 
-@Autonomous(name ="Blue Side", group = "LinearOpMode")
+@Autonomous(name ="Blue Side", group = "Examples")
 public class Garrett extends LinearOpMode {
     GoBildaPinpointDriver odo;
     DcMotorEx Lf;
@@ -46,17 +46,16 @@ public class Garrett extends LinearOpMode {
         odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD);
         odo.resetPosAndIMU();
 
-        Rf.setDirection(DcMotorSimple.Direction.REVERSE);
-        Rb.setDirection(DcMotorSimple.Direction.REVERSE);
+        Lf.setDirection(DcMotorSimple.Direction.REVERSE);
+        Lb.setDirection(DcMotorSimple.Direction.REVERSE);
         //Acutal Auton // Preloaded shots
         waitForStart();
-        RotateClockwise(360);
-     /* 1. move backwards into firing pos */ //moveBackward(30);
-     /* 2. Fire two balls using close fire */ //Cf();
-     /* 3. intake third ball*/ //intake.setPower(-1);
-     //sleep(3000);
-     /* 4. Fire third ball */ //Cf();
-     /* 5. rotate 135 degrees, current pos = 45  */
+        /*1. move backwards into firing pos */ moveBackward(30);
+        /*2. Fire two balls using close fire */ Cf();
+        /* 3. intake third ball*/ intake.setPower(-1);
+        sleep(3000);
+        /* 4. Fire third ball */ Cf();
+        /* 5. rotate 135 degrees */
 
 
     }
@@ -130,7 +129,7 @@ public class Garrett extends LinearOpMode {
         Lb.setPower(-.75);
         Rb.setPower(.75);
 
-        while (opModeIsActive() && ( movedDistance) < distance) {
+        while (opModeIsActive() && (movedDistance) < distance) {
             odo.update();
             movedDistance = odo.getPosY(DistanceUnit.INCH) - startDistance;
         }
@@ -145,6 +144,7 @@ public class Garrett extends LinearOpMode {
         Lb.setPower(0);
         Rb.setPower(0);
     }
+
     //Move RIGHT
     public void moveRight(double distance) {
         odo.update();
@@ -172,10 +172,11 @@ public class Garrett extends LinearOpMode {
         Lb.setPower(0);
         Rb.setPower(0);
     }
-    public void Ff(){
+
+    public void Ff() {
         Lsh.setPower(1.5);
-         Rsh.setPower(-1.5);
-         sleep(250);
+        Rsh.setPower(-1.5);
+        sleep(250);
         Lfeeder.setPower(1);
         Rfeeder.setPower(-1);
         sleep(3000);
@@ -190,6 +191,7 @@ public class Garrett extends LinearOpMode {
         Lfeeder.setPower(0);
         Rfeeder.setPower(0);
     }
+
     public void Cf() {
         Lsh.setPower(.54);
         Rsh.setPower(-.54);
@@ -204,13 +206,14 @@ public class Garrett extends LinearOpMode {
         Rfeeder.setPower(.1);
         sleep(500);*/
     }
+
     //rotate clockwise
     public void RotateClockwise(double distance) {
         odo.update();
 
         double startDistance = odo.getPosX(DistanceUnit.INCH);
         double movedDistance = 0;
-        double movedDegrees =  0;
+        double movedDegrees = 0;
 
         Lf.setPower(-.75);
         Rf.setPower(.75);
@@ -220,9 +223,9 @@ public class Garrett extends LinearOpMode {
         while (opModeIsActive() && (movedDegrees) < distance) {
             odo.update();
             movedDistance = odo.getPosX(DistanceUnit.INCH) - startDistance;
-            movedDegrees =  movedDistance/(2*Math.PI*6.456)*360;
-            telemetry.addData("MovedDistance",movedDistance);
-            telemetry.addData("MovedDeg",movedDegrees);
+            movedDegrees = movedDistance / (2 * Math.PI * 6.456) * 360;
+            telemetry.addData("MovedDistance", movedDistance);
+            telemetry.addData("MovedDeg", movedDegrees);
             telemetry.update();
         }
         //Brakes
@@ -237,5 +240,6 @@ public class Garrett extends LinearOpMode {
         Rb.setPower(0);
     }
 }
+
 
 

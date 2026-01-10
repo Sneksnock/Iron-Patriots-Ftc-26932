@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package      org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 @TeleOp(name = "FieldCentricTeleOp", group = "TeleOp")
 public class TeleOpDecode2026 extends LinearOpMode {
@@ -58,7 +59,14 @@ public class TeleOpDecode2026 extends LinearOpMode {
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
 
 
+        //odo
+        odo.setOffsets(-84.0, -168.0, DistanceUnit.MM);
+        odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
+        odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD);
+        odo.resetPosAndIMU();
         waitForStart();
+
+        odo.resetPosAndIMU();
 
         while (opModeIsActive()) {
             // Reset heading
@@ -112,8 +120,8 @@ public class TeleOpDecode2026 extends LinearOpMode {
 
             // Firing sequence (triggers)
             if (!firing && gamepad1.left_trigger > 0.2) {
-                left_launcher.setPower(.65);
-                right_launcher.setPower(.65);
+                left_launcher.setVelocity(1150);
+                right_launcher.setVelocity(1150);
                 firing = true;
                 firingStartTime = System.currentTimeMillis();
             } else if (!firing && gamepad1.right_trigger > 0.2) {
@@ -147,13 +155,17 @@ public class TeleOpDecode2026 extends LinearOpMode {
 
             double y = gamepad1.left_stick_y;
             double x = gamepad1.left_stick_x;
-            double rx = gamepad1.right_stick_x;
+            double rx = -gamepad1.right_stick_x;
 
-            double heading = odo.getHeading(AngleUnit.RADIANS);
-            double botHeading = Math.toRadians(heading);
+            double heading = odo.getHeading(AngleUnit.DEGREES);
+            telemetry.addData("Heading",heading);
+            telemetry.update();
 
-            double rotX = -x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
-            double rotY = -x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
+            //double rotX = -x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
+            //double rotY = -x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
+
+            double rotX = -(x * Math.cos(-heading) - y * Math.sin(-heading));
+            double rotY = -(x * Math.sin(-heading) + y * Math.cos(-heading));
 
             double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1.0);
             double frontLeftPower = (rotY + rotX + rx) / denominator;
