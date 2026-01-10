@@ -40,11 +40,6 @@ public class Temp extends LinearOpMode {
     private CRServo Lfeeder, Rfeeder;
     private GoBildaPinpointDriver odo;
 
-    /// ---------------- SHOOTER CONSTANTS ----------------
-    private static final double CLOSE_VELOCITY = 1100;
-    private static final double VELOCITY_TOLERANCE = 25;
-    private static final long PULSE_TIME_MS = 250;
-    private static final long PULSE_GAP_MS = 150;
 
     /// ---------------- INIT ----------------
     @Override
@@ -55,10 +50,10 @@ public class Temp extends LinearOpMode {
 
         // Panels Telemetry Initialization
 
-        Lf = hardwareMap.get(DcMotorEx.class, "left_Front_drive");
-        Rf = hardwareMap.get(DcMotorEx.class, "right_Front_drive");
-        Lb = hardwareMap.get(DcMotorEx.class, "left_Back_drive");
-        Rb = hardwareMap.get(DcMotorEx.class, "right_Back_drive");
+        Lf = hardwareMap.get(DcMotorEx.class, "left_front_drive");
+        Rf = hardwareMap.get(DcMotorEx.class, "right_front_drive");
+        Lb = hardwareMap.get(DcMotorEx.class, "left_back_drive");
+        Rb = hardwareMap.get(DcMotorEx.class, "right_back_drive");
 
         intake = hardwareMap.get(DcMotorEx.class, "intake");
         Lsh = hardwareMap.get(DcMotorEx.class, "left_launcher");
@@ -75,8 +70,6 @@ public class Temp extends LinearOpMode {
 
         Lf.setDirection(DcMotorSimple.Direction.REVERSE);
         Lb.setDirection(DcMotorSimple.Direction.REVERSE);
-        Rb.setDirection(DcMotorSimple.Direction.FORWARD);
-        Rf.setDirection(DcMotorSimple.Direction.FORWARD);
         // Note: Rsh and intake directions were set twice in original code, kept as requested
         Rsh.setDirection(DcMotorSimple.Direction.REVERSE);
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -105,6 +98,7 @@ public class Temp extends LinearOpMode {
             double y = currentPose.getY();
             double heading = currentPose.getHeading();
 
+
             moveRobot();
 
             // ---------------- odo telemetry ----------------
@@ -116,11 +110,14 @@ public class Temp extends LinearOpMode {
         }
     }
 
-    /// ---------------- MOVE ROBOT ----------------
+    /// ---------------- controls ----------------
     public void moveRobot() {
-        double forward = gamepad1.left_stick_y;
-        double strafe = gamepad1.left_stick_x;
+        double forward = -gamepad1.left_stick_x;
+        double strafe = -gamepad1.left_stick_y;
         double rotate = gamepad1.right_stick_x;
+        if(gamepad1.optionsWasPressed()){
+            odo.resetPosAndIMU();
+        }
 
         //---------------- math ----------------
         Pose2D pos = odo.getPosition();
