@@ -33,9 +33,9 @@ public class Blue_Side_Pedro extends OpMode {
     // ---------------- POSES ----------------
     private final Pose startPose = new Pose(33.916, 126.968, (2.4196));
     private final Pose scorePose = new Pose(71, 80.281, (2.3));
-    private final Pose line1Pre =  new Pose(45,78, 3.070);
-    private final Pose intake2Pose = new Pose(35, 86, (3.070));
-    private final Pose intake3OutsidePose = new Pose(30, 88, (3.070));
+    private final Pose line1Pre =  new Pose(45,84, 3.070);
+    private final Pose intake2Pose = new Pose(35, 84, (3.070));
+    private final Pose intake3OutsidePose = new Pose(28, 91, (3.070));
     private final Pose line2pre = new Pose(47.153, 61.445, 3.070);
     private final Pose intake4Pose = new Pose(29, 60.5, (3.070));
     private final Pose intake5OutsidePose = new Pose(24, 63, (3.070));
@@ -64,7 +64,7 @@ public class Blue_Side_Pedro extends OpMode {
     private PathChain lever;
 
     // ---------------- SHOOTER CONSTANTS ----------------
-    private static final double CLOSE_VELOCITY =1100;
+    private static final double CLOSE_VELOCITY =1125;
     private static final double VELOCITY_TOLERANCE = 25;
     private static final long PULSE_TIME_MS = 250;
     private static final long PULSE_GAP_MS = 150;

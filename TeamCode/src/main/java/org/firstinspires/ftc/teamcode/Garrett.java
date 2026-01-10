@@ -51,21 +51,56 @@ public class Garrett extends LinearOpMode {
         Lb.setDirection(DcMotorSimple.Direction.REVERSE);
         //Acutal Auton // Preloaded shots
         waitForStart();
-        /*1. move backwards into firing pos */ moveBackward(30);
-        /*2. Fire two balls using close fire */ try {
-            shootAll();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
-        /* 3. intake third ball*/ intake.setPower(-1);
-        sleep(3000);
-
-
-
+        /*1. move backwards into firing pos */
+        moveBackward(30);
+        shootAll();
+        /*2. Fire two balls using close fire */
     }
 
     //Move Forward
+    public void shootAll() {
+        Rsh.setVelocity(CLOSE_VELOCITY);
+        Lsh.setVelocity(CLOSE_VELOCITY);
+        intake.setPower(0.6);
+        boolean atSpeed = false;
+
+        //This loop is constantly asking the robot If it has reached the correct speed, if the robot hasn't then it does nothing.
+        while(atSpeed == false) {
+            atSpeed = Math.abs(Lsh.getVelocity() - CLOSE_VELOCITY) <= VELOCITY_TOLERANCE &&
+                    Math.abs(Rsh.getVelocity() - CLOSE_VELOCITY) <= VELOCITY_TOLERANCE;
+            telemetry.addData("Left shooter velocity:", Lsh.getVelocity());
+            telemetry.addData("Right shooter velocity:", Rsh.getVelocity());
+            telemetry.addData("firing true", atSpeed);
+            telemetry.update();
+            sleep(100);
+        }
+
+        Lfeeder.setPower(1.0);
+        sleep(1600);
+
+        //Stop to keep the second ball from coming up
+        Lfeeder.setPower(0);
+
+        //Wait for the flywheel to get up to speed
+        sleep(500);
+
+        //Shoot the first ball on the left
+        Rfeeder.setPower(1.0);
+        sleep(2000); //Change if super servo
+        Rfeeder.setPower(0);
+
+        sleep(500);
+
+        Lfeeder.setPower(1.0);
+        sleep(1600);
+        Lfeeder.setPower(0.0);
+
+        sleep(500);
+
+        Rfeeder.setPower(1.0);
+        sleep(2000); //Change if super servo
+        Rfeeder.setPower(0.0);
+    }
     public void moveForward(double distance) {
         odo.update();
 
@@ -177,49 +212,7 @@ public class Garrett extends LinearOpMode {
         Lb.setPower(0);
         Rb.setPower(0);
     }
-    public void shootAll() throws InterruptedException {
-        Rsh.setVelocity(CLOSE_VELOCITY);
-        Lsh.setVelocity(CLOSE_VELOCITY);
-        intake.setPower(0.6);
-        boolean atSpeed = false;
 
-        //This loop is constantly asking the robot If it has reached the correct speed, if the robot hasn't then it does nothing.
-        while(atSpeed == false) {
-            atSpeed = Math.abs(Lsh.getVelocity() - CLOSE_VELOCITY) <= VELOCITY_TOLERANCE &&
-                    Math.abs(Rsh.getVelocity() - CLOSE_VELOCITY) <= VELOCITY_TOLERANCE;
-            telemetry.addData("Left shooter velocity:", Lsh.getVelocity());
-            telemetry.addData("Right shooter velocity:", Rsh.getVelocity());
-            telemetry.addData("firing true", atSpeed);
-            telemetry.update();
-           sleep(100);
-        }
-
-        Lfeeder.setPower(1.0);
-        sleep(1600);
-
-        //Stop to keep the second ball from coming up
-        Lfeeder.setPower(0);
-
-        //Wait for the flywheel to get up to speed
-        sleep(500);
-
-        //Shoot the first ball on the left
-        Rfeeder.setPower(1.0);
-        sleep(2000); //Change if super servo
-        Rfeeder.setPower(0);
-
-        sleep(500);
-
-        Lfeeder.setPower(1.0);
-        sleep(1600);
-        Lfeeder.setPower(0.0);
-
-        sleep(500);
-
-        Rfeeder.setPower(1.0);
-        sleep(2000); //Change if super servo
-        Rfeeder.setPower(0.0);
-    }
 /*
     public void Ff() {
         Lsh.setPower(1.5);
