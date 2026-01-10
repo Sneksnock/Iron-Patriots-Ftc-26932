@@ -33,9 +33,9 @@ public class Blue_Side_Pedro extends OpMode {
     // ---------------- POSES ----------------
     private final Pose startPose = new Pose(33.916, 126.968, (2.4196));
     private final Pose scorePose = new Pose(71, 80.281, (2.3));
-    private final Pose line1Pre =  new Pose(45,84, 3.070);
-    private final Pose intake2Pose = new Pose(35, 84, (3.070));
-    private final Pose intake3OutsidePose = new Pose(28, 91, (3.070));
+    private final Pose line1Pre =  new Pose(47.376,81.564, 3.070);
+    private final Pose intake2Pose = new Pose(42, 81, (3.070));
+    private final Pose intake3OutsidePose = new Pose(26, 86, (3.070));
     private final Pose line2pre = new Pose(47.153, 61.445, 3.070);
     private final Pose intake4Pose = new Pose(29, 60.5, (3.070));
     private final Pose intake5OutsidePose = new Pose(24, 63, (3.070));
@@ -64,8 +64,8 @@ public class Blue_Side_Pedro extends OpMode {
     private PathChain lever;
 
     // ---------------- SHOOTER CONSTANTS ----------------
-    private static final double CLOSE_VELOCITY =1125;
-    private static final double VELOCITY_TOLERANCE = 25;
+    private static final double CLOSE_VELOCITY =1100;
+    private static final double VELOCITY_TOLERANCE = 15;
     private static final long PULSE_TIME_MS = 250;
     private static final long PULSE_GAP_MS = 150;
 
@@ -125,7 +125,7 @@ public class Blue_Side_Pedro extends OpMode {
     public void autonomousPathUpdate() throws InterruptedException {
         switch (pathState) {
             case 0:
-                follower.followPath(score1);
+                follower.followPath(score1,true);
                 if (!Schmovin()) {
                     shootAll();
                     pathState = 1;
@@ -133,14 +133,14 @@ public class Blue_Side_Pedro extends OpMode {
                 break;
             case 1:
                 intake.setPower(.75);
-                follower.followPath(l1Pos);
+                follower.followPath(l1Pos,true);
                 if (!Schmovin()) {
                     pathState = 2;
                 }
                 break;
             case 2:
                 intake.setPower(.75);
-                follower.followPath(intakeL12);
+                follower.followPath(intakeL12, true);
                 if (!Schmovin()) {
                     pathState = 3;
                 }
@@ -148,7 +148,7 @@ public class Blue_Side_Pedro extends OpMode {
 
            case 3:
                 intake.setPower(.75);
-                follower.followPath(intakeL13);
+                follower.followPath(intakeL13,true);
                 if (!Schmovin()) {
                     pathState = 4;
                 }
@@ -262,15 +262,10 @@ public class Blue_Side_Pedro extends OpMode {
 
     // ---------------- FIRING MOTIFS ----------------
     // 0 = Purple (Right), 1 = Green (Left)
-
-    public void shootAll() throws InterruptedException {
-        Rsh.setVelocity(CLOSE_VELOCITY);
-        Lsh.setVelocity(CLOSE_VELOCITY);
-        intake.setPower(0.6);
+    public void SpeedCheck()  throws InterruptedException{
         boolean atSpeed = false;
-
-        //This loop is constantly asking the robot If it has reached the correct speed, if the robot hasn't then it does nothing.
         while(atSpeed == false) {
+
             atSpeed = Math.abs(Lsh.getVelocity() - CLOSE_VELOCITY) <= VELOCITY_TOLERANCE &&
                     Math.abs(Rsh.getVelocity() - CLOSE_VELOCITY) <= VELOCITY_TOLERANCE;
             telemetry.addData("Left shooter velocity:", Lsh.getVelocity());
@@ -279,30 +274,36 @@ public class Blue_Side_Pedro extends OpMode {
             telemetry.update();
             Thread.sleep(100);
         }
+    }
+    public void shootAll() throws InterruptedException {
+        Rsh.setVelocity(CLOSE_VELOCITY);
+        Lsh.setVelocity(CLOSE_VELOCITY);
+        intake.setPower(0.6);
 
-        Lfeeder.setPower(1.0);
+        SpeedCheck();
+        Lfeeder.setPower(.75);
         Thread.sleep(1600);
 
         //Stop to keep the second ball from coming up
         Lfeeder.setPower(0);
 
         //Wait for the flywheel to get up to speed
-        Thread.sleep(500);
 
         //Shoot the first ball on the left
-        Rfeeder.setPower(1.0);
+        SpeedCheck();
+        Rfeeder.setPower(.75);
         Thread.sleep(2000); //Change if super servo
         Rfeeder.setPower(0);
 
-        Thread.sleep(500);
 
-        Lfeeder.setPower(1.0);
+        SpeedCheck();
+        Lfeeder.setPower(.75);
         Thread.sleep(1600);
         Lfeeder.setPower(0.0);
 
-        Thread.sleep(500);
 
-        Rfeeder.setPower(1.0);
+        SpeedCheck();
+        Rfeeder.setPower(.75);
         Thread.sleep(2000); //Change if super servo
         Rfeeder.setPower(0.0);
     }

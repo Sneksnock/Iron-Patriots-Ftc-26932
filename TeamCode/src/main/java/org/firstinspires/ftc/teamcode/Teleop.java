@@ -16,7 +16,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-@TeleOp(name = "67", group = "TeleOp")
+@TeleOp(name = "Balling Out", group = "TeleOp")
 public class Teleop extends LinearOpMode {
 
     /// ---------------- HARDWARE ----------------
@@ -27,8 +27,8 @@ public class Teleop extends LinearOpMode {
     private CRServo Lfeeder, Rfeeder;
     private GoBildaPinpointDriver odo;
 
-    private static final double CLOSE_VELOCITY = 1100;
-    private static final double VELOCITY_TOLERANCE = 25;
+    private static final double CLOSE_VELOCITY = 1095;
+    private static final double VELOCITY_TOLERANCE = 10;
 
     private boolean leftTriggerWasDown = false;
     private boolean ballingOut = false;
@@ -44,6 +44,8 @@ public class Teleop extends LinearOpMode {
 
     private boolean diverterToggle = false;
     private boolean diverterState = false;
+    private boolean firing = false;
+    private long firingStartTime;
 
 
     /// ---------------- POSES ----------------
@@ -95,7 +97,7 @@ public class Teleop extends LinearOpMode {
 
         waitForStart();
 
-       /* odo.resetPosAndIMU();
+       odo.resetPosAndIMU();
         Pose2D startingPositon = new Pose2D(DistanceUnit.INCH, 22.583, 60.082, AngleUnit.RADIANS, 2.566);
         odo.setPosition(startingPositon);
 
@@ -105,7 +107,7 @@ public class Teleop extends LinearOpMode {
             // live pose
             currentPose = follower.getPose();
 
-            // ----- LEFT TRIGGER: go to score pose, then shoot -----
+           /* // ----- LEFT TRIGGER: go to score pose, then shoot -----
             boolean leftTriggerDown = gamepad1.left_trigger >= 0.02;
 
             // on PRESS (not hold)
@@ -121,12 +123,14 @@ public class Teleop extends LinearOpMode {
             if (ballingOut && !follower.isBusy()) {
                 ballingOut = false;
                 shootAll();
-            }
-
+//            }*/
             // DRIVER CONTROL LOCKOUT while the path runs
-            if (!ballingOut && !follower.isBusy()) {
+            /*if (ballingOut && follower.isBusy()) {
                 moveRobot();
-            }
+            } else if (!ballingOut && !follower.isBusy()) {
+                moveRobot();
+            }*/
+            moveRobot();
 
             telemetry.addData("status", "Running");
             telemetry.addData("Pedro X", currentPose.getX());
@@ -134,7 +138,9 @@ public class Teleop extends LinearOpMode {
             telemetry.addData("Pedro Heading Deg", Math.toDegrees(currentPose.getHeading()));
             telemetry.addData("ballingOut", ballingOut);
             telemetry.addData("follower busy", follower.isBusy());
-            telemetry.update();*/
+            telemetry.update();
+
+        }
 
     }
 
@@ -188,12 +194,36 @@ public class Teleop extends LinearOpMode {
         double strafe = -gamepad1.left_stick_y;
         double rotate = gamepad1.right_stick_x;
 
-        if(gamepad1.left_trigger >= .02){
-            shootAll();
+
+        //if(gamepad1.left_trigger >= .02){
+            //shootAll();
+        // Firing sequence (triggers)
+        if (!firing && gamepad1.left_trigger > 0.2) {
+            Lsh.setVelocity(1100);
+            Rsh.setVelocity(1100);
+            firing = true;
+            firingStartTime = System.currentTimeMillis();
+        } else if (!firing && gamepad1.right_trigger > 0.2) {
+            Lsh.setPower(.85);
+             Rsh.setPower(0.85);
+            firing = true;
+            firingStartTime = System.currentTimeMillis();
+        } else if (firing && (System.currentTimeMillis() - firingStartTime >=2000 )) {
+            // Start feeder after 1s
+            Lfeeder.setPower(1.0);
+            Rfeeder.setPower(1.0);
+        }
+
+        if (firing && (System.currentTimeMillis() - firingStartTime >= 3500)) {
+            Lfeeder.setPower(0.0);
+            Rfeeder.setPower(0.0);
+            Lsh.setPower(0.0);
+            Rsh.setPower((0.0));
+            firing = false;
         }
 
         if (gamepad1.optionsWasPressed()) {
-            odo.recalibrateIMU();
+            odo.resetPosAndIMU();
         }
 
         Pose2D pos = odo.getPosition();
@@ -262,7 +292,16 @@ public class Teleop extends LinearOpMode {
         } else if (gamepad1.right_bumper){
             Rfeeder.setPower(0.0);
         }
+        // Emergency stop
+        if (gamepad1.dpad_down) {
+            Lsh.setPower(0.0);
+            Rsh.setPower(0.0);
+            Lfeeder.setPower(0.0);
+            Rsh.setPower(0.0);
+            firing = false;
+        }
     }
+
 
     /// ---------------- PATH BUILDER ----------------
     public void buildPaths() {
@@ -270,5 +309,6 @@ public class Teleop extends LinearOpMode {
                 .addPath(new BezierLine(currentPose, scorePose))
                 .setLinearHeadingInterpolation(currentPose.getHeading(), scorePose.getHeading())
                 .build();
+
     }
 }

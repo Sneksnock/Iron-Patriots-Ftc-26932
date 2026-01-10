@@ -11,7 +11,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
-@TeleOp(name = "FieldCentricTeleOp", group = "TeleOp")
+@TeleOp(name = "old", group = "TeleOp")
 public class old extends LinearOpMode {
 
     private DcMotorEx left_front_drive, right_front_drive, left_back_drive, right_back_drive;
