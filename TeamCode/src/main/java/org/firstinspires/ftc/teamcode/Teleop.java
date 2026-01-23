@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -23,7 +24,7 @@ public class Teleop extends LinearOpMode {
     private Follower follower;
     private DcMotorEx Lf, Rf, Lb, Rb;
     private DcMotorEx Lsh, Rsh;
-    private DcMotorEx intake;
+    private DcMotorEx ie;
     private CRServo Lfeeder, Rfeeder;
     private GoBildaPinpointDriver odo;
 
@@ -46,6 +47,9 @@ public class Teleop extends LinearOpMode {
     private boolean diverterState = false;
     private boolean firing = false;
     private long firingStartTime;
+    private ElapsedTime stateTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+    private shooter.ShootingState shootingState;
+
 
 
     /// ---------------- POSES ----------------
@@ -68,7 +72,7 @@ public class Teleop extends LinearOpMode {
         Lb = hardwareMap.get(DcMotorEx.class, "left_back_drive");
         Rb = hardwareMap.get(DcMotorEx.class, "right_back_drive");
 
-        intake = hardwareMap.get(DcMotorEx.class, "intake");
+        ie = hardwareMap.get(DcMotorEx.class, "intake");
         Lsh = hardwareMap.get(DcMotorEx.class, "left_launcher");
         Rsh = hardwareMap.get(DcMotorEx.class, "right_launcher");
         Lfeeder = hardwareMap.get(CRServo.class, "left_feeder");
@@ -76,7 +80,7 @@ public class Teleop extends LinearOpMode {
 
         Rsh.setDirection(DcMotorEx.Direction.REVERSE);
         Rfeeder.setDirection(DcMotorSimple.Direction.REVERSE);
-        intake.setDirection(DcMotorSimple.Direction.REVERSE);
+        ie.setDirection(DcMotorSimple.Direction.REVERSE);
         Lsh.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         Rsh.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         odo = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
@@ -84,7 +88,7 @@ public class Teleop extends LinearOpMode {
         Lf.setDirection(DcMotorSimple.Direction.REVERSE);
         Lb.setDirection(DcMotorSimple.Direction.REVERSE);
         Rsh.setDirection(DcMotorSimple.Direction.REVERSE);
-        intake.setDirection(DcMotorSimple.Direction.REVERSE);
+        ie.setDirection(DcMotorSimple.Direction.REVERSE);
 
         /// ---------------- odometry ----------------
         odo.setOffsets(-84.0, -168.0, DistanceUnit.MM);
@@ -144,84 +148,14 @@ public class Teleop extends LinearOpMode {
 
     }
 
-    public void shootAll() {
-        Rsh.setVelocity(CLOSE_VELOCITY);
-        Lsh.setVelocity(CLOSE_VELOCITY);
-        intake.setPower(0.6);
-        boolean atSpeed = false;
-
-        while (!atSpeed && opModeIsActive()) {
-            atSpeed = Math.abs(Lsh.getVelocity() - CLOSE_VELOCITY) <= VELOCITY_TOLERANCE
-                    && Math.abs(Rsh.getVelocity() - CLOSE_VELOCITY) <= VELOCITY_TOLERANCE;
-
-            telemetry.addData("Left shooter velocity:", Lsh.getVelocity());
-            telemetry.addData("Right shooter velocity:", Rsh.getVelocity());
-            telemetry.addData("firing true", atSpeed);
-            telemetry.update();
-            sleep(100);
-        }
-
-        Lfeeder.setPower(1.0);
-        sleep(1600);
-        Lfeeder.setPower(0);
-
-        sleep(500);
-
-        Rfeeder.setPower(1.0);
-        sleep(2000);
-        Rfeeder.setPower(0);
-
-        sleep(500);
-
-        Lfeeder.setPower(1.0);
-        sleep(1600);
-        Lfeeder.setPower(0.0);
-
-        sleep(500);
-
-        Rfeeder.setPower(1.0);
-        sleep(2000);
-        Rfeeder.setPower(0.0);
-
-        Rsh.setVelocity(0);
-        Lsh.setVelocity(0);
-        intake.setPower(0);
-    }
-
     /// ---------------- controls ----------------
     public void moveRobot() {
         double forward = -gamepad1.left_stick_x;
         double strafe = -gamepad1.left_stick_y;
         double rotate = gamepad1.right_stick_x;
-
-
-        //if(gamepad1.left_trigger >= .02){
-            //shootAll();
-        // Firing sequence (triggers)
-        if (!firing && gamepad1.left_trigger > 0.2) {
-            Lsh.setVelocity(1100);
-            Rsh.setVelocity(1100);
-            firing = true;
-            firingStartTime = System.currentTimeMillis();
-        } else if (!firing && gamepad1.right_trigger > 0.2) {
-            Lsh.setPower(.85);
-             Rsh.setPower(0.85);
-            firing = true;
-            firingStartTime = System.currentTimeMillis();
-        } else if (firing && (System.currentTimeMillis() - firingStartTime >=2000 )) {
-            // Start feeder after 1s
-            Lfeeder.setPower(1.0);
-            Rfeeder.setPower(1.0);
+        if(gamepad1.left_trigger >= 0.2){
+            shooter.shoot();
         }
-
-        if (firing && (System.currentTimeMillis() - firingStartTime >= 3500)) {
-            Lfeeder.setPower(0.0);
-            Rfeeder.setPower(0.0);
-            Lsh.setPower(0.0);
-            Rsh.setPower((0.0));
-            firing = false;
-        }
-
         if (gamepad1.optionsWasPressed()) {
             odo.resetPosAndIMU();
         }
@@ -266,11 +200,11 @@ public class Teleop extends LinearOpMode {
         }
 
         if(intakeState){
-            intake.setPower(1);
+            ie.setPower(1);
         }else if(intakeReverseState){
-            intake.setPower(-1);
+            ie.setPower(-1);
         }else{
-            intake.setPower(0);
+            ie.setPower(0);
         }
 
         // Slow mode toggle
