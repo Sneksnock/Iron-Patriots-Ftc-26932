@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode;
 
-import static org.firstinspires.ftc.teamcode.Blue_Side_Pedro.pathState;
-
 import com.pedropathing.follower.Follower;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -17,7 +15,6 @@ public class shooter {
     private static DcMotorEx Lb;
     private static DcMotorEx Rb;
     public static DcMotorEx ie;
-    public static Follower follower;
     public static ElapsedTime stateTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
     public enum ShootingState {
@@ -31,30 +28,24 @@ public class shooter {
         END,
     }
 
-    private static ShootingState shootingState = ShootingState.IDLE;
+    public static ShootingState shootingState = ShootingState.IDLE;
 
     // FEEDER / INTAKE
     public static double LfeederP = 1.0;
     public static double RfeederP = 1.0;
-    public static double LfeederT = 500;
+    public static double LfeederT = 750;
     public static double RfeederT = 750;
-    public static double ieP = .75;
-    public static double off = -0.05;
+    public static double ieP = .80;
+    public static double off = -0.2;
     public static double offW = 0.0;
 
     // SHOOTER
-    public static double CLOSE_VELOCITY = 1125;
-    public static double VELOCITY_TOLERANCE = 15;
+    public static double CLOSE_VELOCITY = 1160;
+    public static double VELOCITY_TOLERANCE = 5;
     public static double SPIN_TIME = 2000;
 
-    public static int ShotsRemaining = 0;
 
-    public static boolean Schmovin() {
-        return Math.abs(follower.getHeadingError()) > .98 ||
-                !follower.atParametricEnd() ||
-                follower.getVelocity().getMagnitude() > 0.90 ||
-                Math.abs(follower.getAngularVelocity()) > .90;
-    }
+    public static int ShotsRemaining = 0;
 
 
     public static void init(HardwareMap hwMap) {
@@ -78,43 +69,12 @@ public class shooter {
 
         shootingState = ShootingState.IDLE;
         ShotsRemaining = 0;
-
-        Lfeeder.setPower(off);
-        Rfeeder.setPower(off);
         ie.setPower(0);
     }
-
-
-    public static boolean nomove;
-    public static void move() {
-
-        if (nomove == true && shootingState == ShootingState.END) {
-            follower.setMaxPower(1.0);
-            pathState++;
-
-        }
+    
+    public static void shoot(){
+        ShotsRemaining = 4;
     }
-    public static boolean safe() {
-        if (ShotsRemaining > 0 && shootingState != ShootingState.IDLE && !Schmovin() && nomove == false && shootingState != ShootingState.END) {
-            follower.setMaxPower(0.0);
-            nomove = true;
-            return true;
-        }
-        return false;
-    }
-
-
-    public static boolean shotRequested = false;
-    public static void shoot() {
-        if (!Schmovin()) {
-            ShotsRemaining = 1;
-            shotRequested = true;
-        }
-            shotRequested = false;
-        }
-
-
-
 
     public ShootingState getState() {
         return shootingState;
@@ -153,7 +113,7 @@ public class shooter {
 
             case LAUNCH1:
                 if (stateTimer.milliseconds() >= LfeederT) {
-                    Lfeeder.setPower(off);
+                    Lfeeder.setPower(0.0);
                     stateTimer.reset();
                     Rfeeder.setPower(RfeederP);
                     shootingState = ShootingState.LAUNCH2;
@@ -163,7 +123,7 @@ public class shooter {
 
             case LAUNCH2:
                 if (stateTimer.milliseconds() >= RfeederT) {
-                    Rfeeder.setPower(off);
+                    Rfeeder.setPower(0.0);
                     stateTimer.reset();
                     Lfeeder.setPower(LfeederP);
                     shootingState = ShootingState.LAUNCH3;
@@ -173,7 +133,7 @@ public class shooter {
 
             case LAUNCH3:
                 if (stateTimer.milliseconds() >= LfeederT) {
-                    Lfeeder.setPower(off);
+                    Lfeeder.setPower(0.0);
                     stateTimer.reset();
                     Rfeeder.setPower(RfeederP);
                     shootingState = ShootingState.LAUNCH4;
@@ -183,28 +143,13 @@ public class shooter {
 
             case LAUNCH4:
                 if (stateTimer.milliseconds() >= RfeederT) {
-                    Rfeeder.setPower(off);
+                    Rfeeder.setPower(0.0);
                     stateTimer.reset();
-                    Lfeeder.setPower(LfeederP);
-                    shootingState = ShootingState.END;
+                    shootingState = ShootingState.IDLE;
                     ShotsRemaining--;
                 }
                 break;
 
-            case END:
-                if (stateTimer.milliseconds() >= LfeederT) {
-                    Lfeeder.setPower(off);
-                    stateTimer.reset();
-                    shootingState = ShootingState.IDLE2;
-                }
-                break;
-
-            case IDLE2:
-                if (shootingState == ShootingState.IDLE2){
-                ShotsRemaining--;
-                    shootingState = ShootingState.IDLE;
-                }
-                break;
         }
     }
 }

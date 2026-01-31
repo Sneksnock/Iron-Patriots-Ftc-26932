@@ -1,6 +1,9 @@
 package org.firstinspires.ftc.teamcode;
 
-import static org.firstinspires.ftc.teamcode.shooter.Schmovin;
+import static org.firstinspires.ftc.teamcode.shooter.ShotsRemaining;
+import static org.firstinspires.ftc.teamcode.shooter.ie;
+import static org.firstinspires.ftc.teamcode.shooter.ieP;
+import static org.firstinspires.ftc.teamcode.shooter.shoot;
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
@@ -17,7 +20,6 @@ public class Red_Side_Pedro extends OpMode {
 
     private Follower follower;
     private shooter shooter;
-
     private Timer pathTimer, opModeTimer;
 
     private int pathState = 0;
@@ -44,7 +46,6 @@ public class Red_Side_Pedro extends OpMode {
         shooter = new shooter();
         shooter.init(hardwareMap);
     }
-
     @Override
     public void loop() {
         follower.update();
@@ -56,7 +57,15 @@ public class Red_Side_Pedro extends OpMode {
         telemetry.addData("Shooter State", shooter.getState());
         telemetry.addData("At Parametric End", follower.atParametricEnd());
         telemetry.addData("Velocity", follower.getVelocity());
+        telemetry.addData("shots",ShotsRemaining);
         telemetry.update();
+    }
+
+    public boolean Schmovin() {
+        return Math.abs(follower.getHeadingError()) > .98 ||
+                !follower.atParametricEnd() ||
+                follower.getVelocity().getMagnitude() > 0.90 ||
+                Math.abs(follower.getAngularVelocity()) > .90;
     }
 
     public void autonomousPathUpdate() {
@@ -64,51 +73,45 @@ public class Red_Side_Pedro extends OpMode {
             case 0:
                 follower.followPath(score1, true);
                 if (!Schmovin()) {
-                    if (!shotRequested) {
-                        org.firstinspires.ftc.teamcode.shooter.shoot();
-                        shotRequested = true;
-                    }
-                    if (shooter.getState() == org.firstinspires.ftc.teamcode.shooter.ShootingState.IDLE) {
-                        shotRequested = false;
-                        pathState = 1;
-                    }
+                    shooter.shoot();
+                    pathState = 1;
                 }
                 break;
 
             case 1:
-                org.firstinspires.ftc.teamcode.shooter.ie.setPower(.75);
-                follower.followPath(l1Pos, true);
-                if (!Schmovin()) pathState = 2;
-                break;
 
+                if (ShotsRemaining <= 0) {
+                    pathState = 2;
+                }
+                break;
             case 2:
-                org.firstinspires.ftc.teamcode.shooter.ie.setPower(.75);
+                ie.setPower(ieP);
                 follower.followPath(intakeL12, true);
                 if (!Schmovin()) pathState = 3;
                 break;
 
             case 3:
-                org.firstinspires.ftc.teamcode.shooter.ie.setPower(.75);
+                ie.setPower(ieP);
                 follower.followPath(intakeL13, true);
                 if (!Schmovin()) pathState = 4;
                 break;
 
             case 4:
-                org.firstinspires.ftc.teamcode.shooter.ie.setPower(0.0);
                 follower.followPath(score2, true);
                 if (!Schmovin()) {
-                    if (!shotRequested) {
-                        org.firstinspires.ftc.teamcode.shooter.shoot();
-                        shotRequested = true;
-                    }
-                    if (shooter.getState() == org.firstinspires.ftc.teamcode.shooter.ShootingState.IDLE) {
-                        shotRequested = false;
-                        pathState = 5;
-                    }
+                    shoot();
+                    pathState = 5;
                 }
                 break;
-        }
+            case 5:
 
+                if (ShotsRemaining <= 0) {
+                    pathState = 6;
+                }
+                break;
+
+
+        }
     }
 
     public void buildPaths() {

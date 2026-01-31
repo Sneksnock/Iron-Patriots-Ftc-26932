@@ -1,5 +1,12 @@
 package org.firstinspires.ftc.teamcode;
 
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.gamepad1;
+import static org.firstinspires.ftc.teamcode.shooter.ieP;
+import static org.firstinspires.ftc.teamcode.shooter.update;
+import static org.firstinspires.ftc.teamcode.shooter.ShotsRemaining;
+
+import android.net.http.InlineExecutionProhibitedException;
+
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
@@ -27,10 +34,6 @@ public class Teleop extends LinearOpMode {
     private DcMotorEx ie;
     private CRServo Lfeeder, Rfeeder;
     private GoBildaPinpointDriver odo;
-
-    private static final double CLOSE_VELOCITY = 1095;
-    private static final double VELOCITY_TOLERANCE = 10;
-
     private boolean leftTriggerWasDown = false;
     private boolean ballingOut = false;
     private boolean intakeToggle = false;
@@ -57,7 +60,6 @@ public class Teleop extends LinearOpMode {
 
     /// ---------------- PATHS ----------------
     private PathChain score1;
-
     /// ---------------- LIVE POSE ----------------
     private Pose currentPose = new Pose(0, 0, 0);
 
@@ -77,6 +79,7 @@ public class Teleop extends LinearOpMode {
         Rsh = hardwareMap.get(DcMotorEx.class, "right_launcher");
         Lfeeder = hardwareMap.get(CRServo.class, "left_feeder");
         Rfeeder = hardwareMap.get(CRServo.class, "right_feeder");
+
 
         Rsh.setDirection(DcMotorEx.Direction.REVERSE);
         Rfeeder.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -101,13 +104,17 @@ public class Teleop extends LinearOpMode {
 
         waitForStart();
 
+
+
+        shooter.init(hardwareMap);
+
        odo.resetPosAndIMU();
         Pose2D startingPositon = new Pose2D(DistanceUnit.INCH, 22.583, 60.082, AngleUnit.RADIANS, 2.566);
         odo.setPosition(startingPositon);
 
-        while (opModeIsActive()) {
+        while (opModeIsActive()){
             follower.update();
-
+                update();
             // live pose
             currentPose = follower.getPose();
 
@@ -153,9 +160,7 @@ public class Teleop extends LinearOpMode {
         double forward = -gamepad1.left_stick_x;
         double strafe = -gamepad1.left_stick_y;
         double rotate = gamepad1.right_stick_x;
-        if(gamepad1.left_trigger >= 0.2){
-            shooter.shoot();
-        }
+
         if (gamepad1.optionsWasPressed()) {
             odo.resetPosAndIMU();
         }
@@ -200,7 +205,7 @@ public class Teleop extends LinearOpMode {
         }
 
         if(intakeState){
-            ie.setPower(1);
+            ie.setPower(ieP);
         }else if(intakeReverseState){
             ie.setPower(-1);
         }else{
@@ -214,6 +219,12 @@ public class Teleop extends LinearOpMode {
         } else if (!gamepad1.right_stick_button) {
             slowModeToggle = false;
         }
+boolean lastLeftTrigger = false;
+        boolean leftTriggerPressed = gamepad1.left_trigger > 0.3;
+        if (leftTriggerPressed && !lastLeftTrigger) {
+            shooter.shoot();
+        }
+
 
         // feeder toggle (L1/R1)
         if (gamepad1.left_bumper){
@@ -231,11 +242,12 @@ public class Teleop extends LinearOpMode {
             Lsh.setPower(0.0);
             Rsh.setPower(0.0);
             Lfeeder.setPower(0.0);
+            Rfeeder.setPower(0.0);
             Rsh.setPower(0.0);
-            firing = false;
+            ShotsRemaining = 0;
+            shootingState = shooter.ShootingState.IDLE;
         }
     }
-
 
     /// ---------------- PATH BUILDER ----------------
     public void buildPaths() {
