@@ -1,6 +1,4 @@
 package org.firstinspires.ftc.teamcode;
-
-import com.pedropathing.follower.Follower;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -25,7 +23,7 @@ public class shooter {
         LAUNCH2,
         LAUNCH3,
         LAUNCH4,
-        END,
+
     }
 
     public static ShootingState shootingState = ShootingState.IDLE;
