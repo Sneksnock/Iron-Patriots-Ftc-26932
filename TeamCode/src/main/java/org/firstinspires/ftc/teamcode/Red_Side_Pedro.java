@@ -21,7 +21,7 @@ public class Red_Side_Pedro extends OpMode {
     private Follower follower;
     private shooter shooter;
     private Timer pathTimer, opModeTimer;
-
+    private int wait = 2000;
     private int pathState = 0;
     private boolean shotRequested = false;
 
@@ -61,12 +61,16 @@ public class Red_Side_Pedro extends OpMode {
         telemetry.update();
     }
 
+
+
+
     public boolean Schmovin() {
         return Math.abs(follower.getHeadingError()) > .98 ||
                 !follower.atParametricEnd() ||
                 follower.getVelocity().getMagnitude() > 0.90 ||
                 Math.abs(follower.getAngularVelocity()) > .90;
     }
+
 
     public void autonomousPathUpdate() {
         switch (pathState) {

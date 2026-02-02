@@ -15,6 +15,7 @@ import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
@@ -24,9 +25,11 @@ public class Blue_Side_Pedro extends OpMode {
     private shooter shooter;
     private Follower follower;
 
-    private Timer pathTimer, opModeTimer;
+    public static Timer pathTimer, opModeTimer, waitTimer;
+
 
     private int pathState = 0;
+    private int wait = 2000;
     private boolean shotRequested = false;
 
     private  Pose startPose = new Pose(33.916, 126.968, (2.4196));
@@ -36,7 +39,7 @@ public class Blue_Side_Pedro extends OpMode {
     private Pose intake3OutsidePose = new Pose(26, 86, (3.070));
     private Pose leverPose = new Pose(22.583, 60.082, (2.566));
 
-    private PathChain score1, l1Pos, intakeL12, intakeL13, score2, lever;
+    private PathChain score1, l1Pos, intakeL12, intakeL13, score2, lever, score;
 
     @Override
     public void init() {
@@ -45,6 +48,8 @@ public class Blue_Side_Pedro extends OpMode {
         pathTimer = new Timer();
         opModeTimer = new Timer();
         opModeTimer.resetTimer();
+        waitTimer = new Timer();
+        waitTimer.resetTimer();
         follower = Constants.createFollower(hardwareMap);
         buildPaths();
         follower.setStartingPose(startPose);
@@ -66,6 +71,7 @@ public class Blue_Side_Pedro extends OpMode {
 
     public void autonomousPathUpdate() {
         switch (pathState) {
+
             case 0:
                 follower.followPath(score1, true);
                 if (!Schmovin()) {
@@ -107,11 +113,56 @@ public class Blue_Side_Pedro extends OpMode {
                     pathState = 6;
                 }
                 break;
+            case 6:
+                follower.followPath(lever, true);
+                    if (!Schmovin()){
+                pathState = 7;
+                }
+                break;
+            case 7:
+                waitTimer.resetTimer();
+                if (waitTimer.getElapsedTime() >= wait){
+                    pathState = 8;
+                }
+            break;
+            case 8:
+             follower.followPath(score, true);
+             if (!Schmovin()){
+                 shoot();
+                 pathState = 9;
+             }
+             break;
+            case 9:
+                if(ShotsRemaining <= 0){
+                    pathState = 10;
+                }
+                break;
+            case 10:
+                follower.followPath(lever, true);
+                if (!Schmovin()){
+                    pathState = 11;
+                }
+                break;
+            case 11:
+                waitTimer.resetTimer();
+                if (waitTimer.getElapsedTime() >= wait){
+                    pathState = 12;
+                }
+                break;
+            case 12:
+                follower.followPath(score, true);
+                if (!Schmovin()){
+                    shoot();
+                    pathState = 13;
+                }
+                break;
+            case 13:
+                if(ShotsRemaining <= 0){
+                    pathState = 14;
+                }
+                break;
 
-         //   case 6:
-            //    ie.setPower(.75);
-           //     follower.followPath(lever, true);
-             //   break;
+
         }
     }
 
@@ -151,6 +202,10 @@ public class Blue_Side_Pedro extends OpMode {
         lever = follower.pathBuilder()
                 .addPath(new BezierLine(scorePose, leverPose))
                 .setLinearHeadingInterpolation(scorePose.getHeading(), leverPose.getHeading())
+                .build();
+        score = follower.pathBuilder()
+                .addPath(new BezierLine(leverPose, scorePose))
+                .setLinearHeadingInterpolation(leverPose.getHeading(), scorePose.getHeading())
                 .build();
     }
 }
