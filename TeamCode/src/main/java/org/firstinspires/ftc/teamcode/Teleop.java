@@ -2,11 +2,9 @@ package org.firstinspires.ftc.teamcode;
 
 import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.gamepad1;
 import static org.firstinspires.ftc.teamcode.shooter.ieP;
-import static org.firstinspires.ftc.teamcode.shooter.update;
-import static org.firstinspires.ftc.teamcode.shooter.ShotsRemaining;
+
 
 import android.net.http.InlineExecutionProhibitedException;
-
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
@@ -34,6 +32,7 @@ public class Teleop extends LinearOpMode {
     private DcMotorEx ie;
     private CRServo Lfeeder, Rfeeder;
     private GoBildaPinpointDriver odo;
+    private shooter shooter;
     private boolean leftTriggerWasDown = false;
     private boolean ballingOut = false;
     private boolean intakeToggle = false;
@@ -105,7 +104,7 @@ public class Teleop extends LinearOpMode {
         waitForStart();
 
 
-
+      shooter = new shooter();
         shooter.init(hardwareMap);
 
        odo.resetPosAndIMU();
@@ -114,11 +113,11 @@ public class Teleop extends LinearOpMode {
 
         while (opModeIsActive()){
             follower.update();
-                update();
+                shooter.update();
             // live pose
             currentPose = follower.getPose();
 
-           /* // ----- LEFT TRIGGER: go to score pose, then shoot -----
+           /* // ----- RIGHT TRIGGER: go to score pose, then shoot -----
             boolean leftTriggerDown = gamepad1.left_trigger >= 0.02;
 
             // on PRESS (not hold)
@@ -244,8 +243,8 @@ boolean lastLeftTrigger = false;
             Lfeeder.setPower(0.0);
             Rfeeder.setPower(0.0);
             Rsh.setPower(0.0);
-            ShotsRemaining = 0;
-            shootingState = shooter.ShootingState.IDLE;
+            shooter.ShotsRemaining = 0;
+            shootingState = org.firstinspires.ftc.teamcode.shooter.ShootingState.IDLE;
         }
     }
 

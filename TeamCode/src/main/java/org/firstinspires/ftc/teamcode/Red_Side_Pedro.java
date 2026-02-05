@@ -1,10 +1,6 @@
 package org.firstinspires.ftc.teamcode;
-
-import static org.firstinspires.ftc.teamcode.shooter.ShotsRemaining;
 import static org.firstinspires.ftc.teamcode.shooter.ie;
 import static org.firstinspires.ftc.teamcode.shooter.ieP;
-import static org.firstinspires.ftc.teamcode.shooter.shoot;
-
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
@@ -57,7 +53,7 @@ public class Red_Side_Pedro extends OpMode {
         telemetry.addData("Shooter State", shooter.getState());
         telemetry.addData("At Parametric End", follower.atParametricEnd());
         telemetry.addData("Velocity", follower.getVelocity());
-        telemetry.addData("shots",ShotsRemaining);
+        telemetry.addData("shots",shooter.ShotsRemaining);
         telemetry.update();
     }
 
@@ -84,7 +80,7 @@ public class Red_Side_Pedro extends OpMode {
 
             case 1:
 
-                if (ShotsRemaining <= 0) {
+                if (shooter.ShotsRemaining <= 0) {
                     pathState = 2;
                 }
                 break;
@@ -97,19 +93,20 @@ public class Red_Side_Pedro extends OpMode {
             case 3:
                 ie.setPower(ieP);
                 follower.followPath(intakeL13, true);
-                if (!Schmovin()) pathState = 4;
-                break;
-
+                if (!Schmovin()) {
+                    pathState = 4;
+                    break;
+                }
             case 4:
                 follower.followPath(score2, true);
                 if (!Schmovin()) {
-                    shoot();
+                    shooter.shoot();
                     pathState = 5;
                 }
                 break;
             case 5:
 
-                if (ShotsRemaining <= 0) {
+                if (shooter.ShotsRemaining <= 0) {
                     pathState = 6;
                 }
                 break;

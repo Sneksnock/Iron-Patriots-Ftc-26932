@@ -2,10 +2,10 @@ package org.firstinspires.ftc.teamcode;
 
 import static org.firstinspires.ftc.teamcode.shooter.ShootingState.IDLE;
 import static org.firstinspires.ftc.teamcode.shooter.ShootingState.IDLE2;
-import static org.firstinspires.ftc.teamcode.shooter.ShotsRemaining;
 import static org.firstinspires.ftc.teamcode.shooter.ie;
 import static org.firstinspires.ftc.teamcode.shooter.ieP;
-import static org.firstinspires.ftc.teamcode.shooter.shoot;
+import static org.firstinspires.ftc.teamcode.shooter.off;
+import static org.firstinspires.ftc.teamcode.shooter.offW;
 import static org.firstinspires.ftc.teamcode.shooter.shootingState;
 
 import com.pedropathing.follower.Follower;
@@ -25,21 +25,23 @@ public class Blue_Side_Pedro extends OpMode {
     private shooter shooter;
     private Follower follower;
 
-    public static Timer pathTimer, opModeTimer, waitTimer;
+    public Timer pathTimer, opModeTimer, waitTimer;
 
 
     private int pathState = 0;
-    private int wait = 2000;
+    private int wait = 1500 ;
     private boolean shotRequested = false;
 
     private  Pose startPose = new Pose(33.916, 126.968, (2.4196));
-    private Pose scorePose = new Pose(71, 80.281, (2.3));
-    private  Pose line1Pre =  new Pose(47.376,81.564, 3.070);
-    private Pose intake2Pose = new Pose(42, 81, (3.070));
-    private Pose intake3OutsidePose = new Pose(26, 86, (3.070));
-    private Pose leverPose = new Pose(22.583, 60.082, (2.566));
+    private Pose scorePose = new Pose(72, 85.281, (2.3));
+    private  Pose line1Pre =  new Pose(48.376,86, 3.070);
+    private Pose intake2Pose = new Pose(40, 86, 3.070);
+    private Pose intake3OutsidePose = new Pose(13, 79,3.070);
+    private Pose tempPose = new Pose(25, 60, 3.070);
+    private Pose leverPose = new Pose(21.0, 64.082, 2.566);
 
-    private PathChain score1, l1Pos, intakeL12, intakeL13, score2, lever, score;
+
+    private PathChain score1, l1Pos, intakeL12, intakeL13, score2, lever, score, lever2;
 
     @Override
     public void init() {
@@ -73,16 +75,18 @@ public class Blue_Side_Pedro extends OpMode {
         switch (pathState) {
 
             case 0:
+                ie.setPower(ieP);
                 follower.followPath(score1, true);
                 if (!Schmovin()) {
-                    shoot();
+                    pathTimer.resetTimer();
+                    shooter.shoot();
                     pathState = 1;
                 }
                 break;
 
             case 1:
 
-                if (ShotsRemaining <= 0) {
+                if (shooter.ShotsRemaining <= 0) {
                     pathState = 2;
                 }
 
@@ -91,74 +95,90 @@ public class Blue_Side_Pedro extends OpMode {
            case 2:
                 ie.setPower(ieP);
                 follower.followPath(intakeL12, true);
-                if (!Schmovin()) pathState = 3;
+                if (!Schmovin()){
+                    pathState = 3;
+                    }
+
                 break;
 
            case 3:
                ie.setPower(ieP);
                 follower.followPath(intakeL13, true);
-                if (!Schmovin()) pathState = 4;
-                break;
-
+                if (!Schmovin()) {
+                    pathState = 4;
+                    break;
+                }
             case 4:
                 follower.followPath(score2, true);
                 if (!Schmovin()){
-                    shoot();
+                    shooter.shoot();
                     pathState = 5;
                 }
                 break;
             case 5:
 
-                if (ShotsRemaining <= 0) {
+                if (shooter.ShotsRemaining <= 0) {
                     pathState = 6;
                 }
                 break;
             case 6:
-                follower.followPath(lever, true);
-                    if (!Schmovin()){
-                pathState = 7;
+                ie.setPower(ieP);
+                follower.followPath(lever2, true);
+                if (!Schmovin()){
+                    waitTimer.resetTimer();
+                    pathState = 7;
                 }
                 break;
             case 7:
-                waitTimer.resetTimer();
-                if (waitTimer.getElapsedTime() >= wait){
-                    pathState = 8;
-                }
-            break;
-            case 8:
-             follower.followPath(score, true);
-             if (!Schmovin()){
-                 shoot();
-                 pathState = 9;
-             }
-             break;
-            case 9:
-                if(ShotsRemaining <= 0){
-                    pathState = 10;
-                }
-                break;
-            case 10:
+                ie.setPower(ieP);
                 follower.followPath(lever, true);
                 if (!Schmovin()){
+                    waitTimer.resetTimer();
+                pathState = 8;
+                }
+                break;
+            case 8:
+                if (waitTimer.getElapsedTime() >= wait){
+                    pathState = 9;
+                    ie.setPower(off);
+                }
+            break;
+            case 9:
+             follower.followPath(score, true);
+             if (!Schmovin()){
+                 shooter.shoot();
+                 pathState = 10;
+             }
+             break;
+            case 10:
+                if(shooter.ShotsRemaining <= 0){
                     pathState = 11;
                 }
                 break;
             case 11:
-                waitTimer.resetTimer();
-                if (waitTimer.getElapsedTime() >= wait){
+                ie.setPower(ieP);
+                follower.followPath(lever, true);
+                if (!Schmovin()){
+                    waitTimer.resetTimer();
                     pathState = 12;
                 }
                 break;
             case 12:
-                follower.followPath(score, true);
-                if (!Schmovin()){
-                    shoot();
+                if (waitTimer.getElapsedTime() >= wait){
                     pathState = 13;
                 }
                 break;
             case 13:
-                if(ShotsRemaining <= 0){
+
+                follower.followPath(score, true);
+                if (!Schmovin()){
+                    shooter.shoot();
                     pathState = 14;
+                }
+                break;
+            case 14:
+                if(shooter.ShotsRemaining <= 0){
+                    pathState = 15;
                 }
                 break;
 
@@ -198,10 +218,13 @@ public class Blue_Side_Pedro extends OpMode {
                 .addPath(new BezierLine(intake3OutsidePose, scorePose))
                 .setLinearHeadingInterpolation(intake3OutsidePose.getHeading(), scorePose.getHeading())
                 .build();
-
-        lever = follower.pathBuilder()
-                .addPath(new BezierLine(scorePose, leverPose))
+        lever2 = follower.pathBuilder()
+                .addPath(new BezierLine(scorePose, tempPose))
                 .setLinearHeadingInterpolation(scorePose.getHeading(), leverPose.getHeading())
+                .build();
+        lever = follower.pathBuilder()
+                .addPath(new BezierLine(tempPose, leverPose))
+                .setLinearHeadingInterpolation(tempPose.getHeading(), leverPose.getHeading())
                 .build();
         score = follower.pathBuilder()
                 .addPath(new BezierLine(leverPose, scorePose))

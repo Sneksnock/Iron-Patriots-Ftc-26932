@@ -38,12 +38,12 @@ public class shooter {
     public static double offW = 0.0;
 
     // SHOOTER
-    public static double CLOSE_VELOCITY = 1160;
+    public static double CLOSE_VELOCITY = 1130;
     public static double VELOCITY_TOLERANCE = 5;
     public static double SPIN_TIME = 2000;
 
 
-    public static int ShotsRemaining = 0;
+    public int ShotsRemaining = 0;
 
 
     public static void init(HardwareMap hwMap) {
@@ -66,11 +66,10 @@ public class shooter {
         Rfeeder.setDirection(DcMotorSimple.Direction.REVERSE);
 
         shootingState = ShootingState.IDLE;
-        ShotsRemaining = 0;
         ie.setPower(0);
     }
     
-    public static void shoot(){
+    public void shoot(){
         ShotsRemaining = 4;
     }
 
@@ -78,7 +77,7 @@ public class shooter {
         return shootingState;
     }
 
-    public static void update() {
+    public void update() {
         boolean atSpeed =
                 Math.abs(Lsh.getVelocity() - CLOSE_VELOCITY) <= VELOCITY_TOLERANCE &&
                         Math.abs(Rsh.getVelocity() - CLOSE_VELOCITY) <= VELOCITY_TOLERANCE;
