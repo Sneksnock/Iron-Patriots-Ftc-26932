@@ -13,7 +13,7 @@ public class shooter {
     private static DcMotorEx Lb;
     private static DcMotorEx Rb;
     public static DcMotorEx ie;
-    public static ElapsedTime stateTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+    public  ElapsedTime stateTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
     public enum ShootingState {
         IDLE2,
@@ -31,14 +31,14 @@ public class shooter {
     // FEEDER / INTAKE
     public static double LfeederP = 1.0;
     public static double RfeederP = 1.0;
-    public static double LfeederT = 750;
-    public static double RfeederT = 750;
+    public static double LfeederT = 900;
+    public static double RfeederT = 900;
     public static double ieP = .80;
     public static double off = -0.2;
     public static double offW = 0.0;
 
     // SHOOTER
-    public static double CLOSE_VELOCITY = 1130;
+    public static double CLOSE_VELOCITY = 1110;
     public static double VELOCITY_TOLERANCE = 5;
     public static double SPIN_TIME = 2000;
 
