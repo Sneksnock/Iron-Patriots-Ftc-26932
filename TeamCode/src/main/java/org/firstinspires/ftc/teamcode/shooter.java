@@ -39,6 +39,7 @@ public class shooter {
 
     // SHOOTER
     public static double CLOSE_VELOCITY = 1110;
+    public static double FAR_VELOCITY = 2000;
     public static double VELOCITY_TOLERANCE = 5;
     public static double SPIN_TIME = 2000;
 
@@ -76,11 +77,12 @@ public class shooter {
     public ShootingState getState() {
         return shootingState;
     }
+    public boolean atSpeed =
+            Math.abs(Lsh.getVelocity() - CLOSE_VELOCITY) <= VELOCITY_TOLERANCE &&
+                    Math.abs(Rsh.getVelocity() - CLOSE_VELOCITY) <= VELOCITY_TOLERANCE;
+
 
     public void update() {
-        boolean atSpeed =
-                Math.abs(Lsh.getVelocity() - CLOSE_VELOCITY) <= VELOCITY_TOLERANCE &&
-                        Math.abs(Rsh.getVelocity() - CLOSE_VELOCITY) <= VELOCITY_TOLERANCE;
 
         switch (shootingState) {
             case IDLE:
