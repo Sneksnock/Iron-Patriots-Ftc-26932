@@ -13,13 +13,12 @@ public class PIDF_FlyWheel_Tuning extends OpMode {
     public DcMotorEx Lsh;
     public DcMotorEx Rsh;
     double high = 1110;
-    double low = 1100;
+    double low = 0;
 
     double target = high;
     double F = 0;
     double P = 0;
     double[] stepSizes = {10.0, 1.0, 0.1, 0.001, 0.0001};
-
     int step = 1;
     @Override
     public void init() {
@@ -37,11 +36,13 @@ public class PIDF_FlyWheel_Tuning extends OpMode {
 
     @Override
     public void loop() {
-if (gamepad1.yWasPressed()){
+if (gamepad1.yWasPressed()) {
     if (target == high) {
         target = low;
-    } else { target = high; }
-
+    } else {
+        target = high;
+    }
+}
     if (gamepad1.bWasPressed()) {
         step = (step + 1) % stepSizes.length;
     }
@@ -84,8 +85,6 @@ if (gamepad1.yWasPressed()){
     telemetry.addData("Tuning P","%.4f", P);
     telemetry.addData("Tuning F","%.4f", F);
     telemetry.addData("Step Size","%.4f", stepSizes[step]);
-
-}
 
 
 
