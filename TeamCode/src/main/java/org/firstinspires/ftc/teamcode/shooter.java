@@ -1,8 +1,10 @@
 package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 public class shooter {
@@ -36,17 +38,21 @@ public class shooter {
     public static double ieP = .80;
     public static double off = -0.2;
     public static double offW = 0.0;
+   public static double F = 14;
+   public static double P = 400;
 
     // SHOOTER
     public static double CLOSE_VELOCITY = 1110;
-    public static double VELOCITY_TOLERANCE = 5;
-    public static double SPIN_TIME = 2000;
+    public static double VELOCITY_TOLERANCE = 20;
+    public static double SPIN_TIME = 750;
 
 
     public int ShotsRemaining = 0;
 
 
     public static void init(HardwareMap hwMap) {
+
+
         ie = hwMap.get(DcMotorEx.class, "intake");
         Lsh = hwMap.get(DcMotorEx.class, "left_launcher");
         Rsh = hwMap.get(DcMotorEx.class, "right_launcher");
@@ -64,6 +70,10 @@ public class shooter {
         Lsh.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         Rsh.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         Rfeeder.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        PIDFCoefficients pidfCoefficients = new PIDFCoefficients(P, 0, 0, F);
+        Lsh.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfCoefficients);
+        Rsh.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfCoefficients);
 
         shootingState = ShootingState.IDLE;
         ie.setPower(0);
