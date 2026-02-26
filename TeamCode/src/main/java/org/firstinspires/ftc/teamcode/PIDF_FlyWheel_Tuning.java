@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -12,6 +13,9 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 public class PIDF_FlyWheel_Tuning extends OpMode {
     public DcMotorEx Lsh;
     public DcMotorEx Rsh;
+    public CRServo l;
+    public CRServo R;
+    public static DcMotorEx ie;
     double high = 1110;
     double low = 0;
 
@@ -24,6 +28,9 @@ public class PIDF_FlyWheel_Tuning extends OpMode {
     public void init() {
         Lsh = hardwareMap.get(DcMotorEx.class, "left_launcher");
         Rsh = hardwareMap.get(DcMotorEx.class, "right_launcher");
+        l = hardwareMap.get(CRServo.class, "left_feeder");
+        R = hardwareMap.get(CRServo.class, "right_feeder");
+        ie = hardwareMap.get(DcMotorEx.class, "intake");;
         Lsh.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         Rsh.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         Rsh.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -36,6 +43,9 @@ public class PIDF_FlyWheel_Tuning extends OpMode {
 
     @Override
     public void loop() {
+        l.setPower(1.0);
+        R.setPower(-1.0);
+        ie.setPower(-1.0);
 if (gamepad1.yWasPressed()) {
     if (target == high) {
         target = low;

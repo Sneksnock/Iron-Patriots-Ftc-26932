@@ -11,7 +11,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-@Autonomous(name = "Red_Side_Pedro", group = "Examples")
+@Autonomous(name = "Red Side", group = "Examples")
 public class Red_Side_Pedro extends OpMode {
 
     private Follower follower;
@@ -22,15 +22,17 @@ public class Red_Side_Pedro extends OpMode {
     private boolean shotRequested = false;
 
     private final Pose startPose = new Pose(124.311, 123.794, 0.739);
-    private final Pose scorePose = new Pose(80, 87.281, 0.712);
-    private final Pose line1PrePose = new Pose(102.834, 82.072, 0.0);
-    private final Pose intake2Pose = new Pose(125.172, 81.622, 0.02);
-    private final Pose line2PrePose = new Pose( 102.56, 57.89, 0.06);
-    private final Pose line2Pose = new Pose (127.34, 53.68, 0.01);
+    private final Pose scorePose = new Pose(72, 129.5, 0.2);
+    private final Pose line1PrePose = new Pose(102.5, 86.75, 0.0);
+    private final Pose intakeline1Pose = new Pose(128.0, 81.0, 0.02);
+    private final Pose line2PrePose = new Pose( 102.5, 61.5, 0.06);
+
+    //private final Pose intake3PrePose = new Pose(102.5, 39.5, 0.02);
+    private final Pose intakeline2Pose = new Pose (131.5, 56.0, 0.01);
     private final Pose leverPrePose = new Pose (139, 60, 0.03);
     private final Pose leverPose = new Pose (108, 66, 2.56);
 
-    private PathChain score1, l1Pos, intakeL12, L2Pre, L2, L2Score, leverPre, lever, score, score2;
+    private PathChain score1, l1Pre, intakeL1, score2, L2Pre, intakeL2, score3, leverPre, lever, leverscore;
 
     @Override
     public void init() {
@@ -90,14 +92,14 @@ public class Red_Side_Pedro extends OpMode {
                 break;
             case 2:
                 ie.setPower(ieP);
-                follower.followPath(l1Pos, true);
+                follower.followPath(l1Pre, true);
                 if (!Schmovin()) {
                     pathState = 3;
                 }
                 break;
             case 3:
                 ie.setPower(ieP);
-                follower.followPath(intakeL12, true);
+                follower.followPath(intakeL1, true);
                 if (!Schmovin()) {
                     pathState = 4;
                 }
@@ -124,29 +126,23 @@ public class Red_Side_Pedro extends OpMode {
                 break;
             case 7:
                 ie.setPower(ieP);
-                follower.followPath(L2);
+                follower.followPath(intakeL2);
                 if (!Schmovin()) {
                     pathState = 8;
                     waitTimer.resetTimer();
                 }
                 break;
             case 8:
-                follower.followPath(L2Score);
+                follower.followPath(score3);
                 if (!Schmovin()) {
                     pathState = 9;
                     waitTimer.resetTimer();
+                    shooter.shoot();
                 }
                 break;
             case 9:
-                follower.followPath(score);
-                if(!Schmovin()) {
-                    shooter.shoot();
-                    pathState = 10;
-                }
-                break;
-            case 10:
                 if (shooter.ShotsRemaining <= 0) {
-                    pathState = 11;
+                    pathState = 10;
                 }
                 break;
         }
@@ -158,30 +154,30 @@ public class Red_Side_Pedro extends OpMode {
                 .setLinearHeadingInterpolation(startPose.getHeading(), scorePose.getHeading())
                 .build();
 
-        l1Pos = follower.pathBuilder()
+        l1Pre = follower.pathBuilder()
                 .addPath(new BezierLine(scorePose, line1PrePose ))
                 .setLinearHeadingInterpolation(scorePose.getHeading(), line1PrePose.getHeading())
                 .build();
 
-        intakeL12 = follower.pathBuilder()
-                .addPath(new BezierLine(line1PrePose, intake2Pose))
-                .setLinearHeadingInterpolation(line1PrePose.getHeading(), intake2Pose.getHeading())
+        intakeL1 = follower.pathBuilder()
+                .addPath(new BezierLine(line1PrePose, intakeline1Pose))
+                .setLinearHeadingInterpolation(line1PrePose.getHeading(), intakeline1Pose.getHeading())
                 .build();
         score2 = follower.pathBuilder()
-                .addPath(new BezierLine(intake2Pose, scorePose))
-                .setLinearHeadingInterpolation(line2Pose.getHeading(), scorePose.getHeading())
+                .addPath(new BezierLine(intakeline1Pose, scorePose))
+                .setLinearHeadingInterpolation(intakeline1Pose.getHeading(), scorePose.getHeading())
                 .build();
         L2Pre = follower.pathBuilder()
                 .addPath(new BezierLine(scorePose, line2PrePose))
-                .setLinearHeadingInterpolation(scorePose.getHeading(), line1PrePose.getHeading())
+                .setLinearHeadingInterpolation(scorePose.getHeading(), line2PrePose.getHeading())
                 .build();
-        L2 = follower.pathBuilder()
-                .addPath(new BezierLine( line2PrePose, line2Pose))
-                .setLinearHeadingInterpolation(line2PrePose.getHeading(), line2Pose.getHeading())
+        intakeL2 = follower.pathBuilder()
+                .addPath(new BezierLine( line2PrePose, intakeline2Pose))
+                .setLinearHeadingInterpolation(line2PrePose.getHeading(), intakeline2Pose.getHeading())
                 .build();
-        L2Score = follower.pathBuilder()
-                .addPath(new BezierLine( line2Pose, scorePose))
-                .setLinearHeadingInterpolation(line2Pose.getHeading(), scorePose.getHeading())
+        score3 = follower.pathBuilder()
+                .addPath(new BezierLine( intakeline2Pose, scorePose))
+                .setLinearHeadingInterpolation(intakeline2Pose.getHeading(), scorePose.getHeading())
                 .build();
         leverPre = follower.pathBuilder()
                 .addPath(new BezierLine(scorePose, leverPrePose))
@@ -193,7 +189,7 @@ public class Red_Side_Pedro extends OpMode {
                 .setLinearHeadingInterpolation(leverPrePose.getHeading(), leverPose.getHeading())
                 .build();
 
-        score = follower.pathBuilder()
+        leverscore = follower.pathBuilder()
                 .addPath(new BezierLine(leverPose, scorePose))
                 .setLinearHeadingInterpolation(leverPose.getHeading(), scorePose.getHeading())
                 .build();

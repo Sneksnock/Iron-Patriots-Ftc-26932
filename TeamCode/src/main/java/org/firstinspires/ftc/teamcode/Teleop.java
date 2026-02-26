@@ -223,6 +223,11 @@ boolean lastLeftTrigger = false;
         if (leftTriggerPressed && !lastLeftTrigger) {
             shooter.shoot();
         }
+        boolean lastRightTrigger = false;
+        boolean rightTriggerPressed = gamepad1.right_trigger > 0.3;
+        if (rightTriggerPressed && !lastRightTrigger) {
+            shooter.shootFar();
+        }
 
 
         // feeder toggle (L1/R1)
