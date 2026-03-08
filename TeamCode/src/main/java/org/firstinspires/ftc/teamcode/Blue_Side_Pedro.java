@@ -25,20 +25,20 @@ public class Blue_Side_Pedro extends OpMode {
     private shooter shooter;
     private Follower follower;
 
-    public Timer pathTimer, opModeTimer, waitTimer;
-
+    public Timer opModeTimer, waitTimer;
+    private ElapsedTime pathTimer;
 
     private int pathState = 0;
-    private int wait = 1500 ;
+    private double wait = 1.5;
+    private double MoveBalling = 2;
+    private double intake = 2.5;
     private boolean shotRequested = false;
 
-
-
-    private  Pose startPose = new Pose(33.916, 126.968, (2.4196));
+    private Pose startPose = new Pose(33.916, 126.968, (2.4196));
     private Pose scorePose = new Pose(85, 133, (3.1));
-    private  Pose line1PrePose =  new Pose(54.25,88, 3.07);
+    private Pose line1PrePose = new Pose(54.25, 88, 3.07);
     private Pose intake2Pose = new Pose(40, 86, 3.07);
-    private Pose intake3OutsidePose = new Pose(29.75, 82.5,3.07);
+    private Pose intake3OutsidePose = new Pose(29.75, 82.5, 3.07);
     private Pose leverPrePose = new Pose(25, 60, 2.56);
     private Pose leverPose = new Pose(19.0, 62.082, 2.56);
     private Pose line2PrePose = new Pose(50, 62.5, 3.07);
@@ -49,17 +49,20 @@ public class Blue_Side_Pedro extends OpMode {
     @Override
     public void init() {
         shooter = new shooter();
-        pathTimer = new Timer();
+        pathTimer = new ElapsedTime();
         opModeTimer = new Timer();
         waitTimer = new Timer();
+
+        pathTimer.reset();
         opModeTimer.resetTimer();
         waitTimer.resetTimer();
+
         shooter.init(hardwareMap);
         follower = Constants.createFollower(hardwareMap);
         buildPaths();
         follower.setStartingPose(startPose);
-
     }
+
     @Override
     public void loop() {
         follower.update();
@@ -69,8 +72,10 @@ public class Blue_Side_Pedro extends OpMode {
 
         telemetry.addData("Path State", pathState);
         telemetry.addData("Shooter State", shooter.getState());
-        //telemetry.addData("At Parametric End", follower.atParametricEnd());
+        telemetry.addData("Follower Busy", follower.isBusy());
         telemetry.addData("Velocity", follower.getVelocity());
+        telemetry.addData("Shots Remaining", shooter.ShotsRemaining);
+        telemetry.addData("Path Timer", pathTimer.seconds());
         telemetry.update();
     }
 
@@ -79,144 +84,164 @@ public class Blue_Side_Pedro extends OpMode {
 
             case 0:
                 follower.followPath(score1, true);
-                if (!Schmovin()) {
-                    pathTimer.resetTimer();
-                    shooter.shoot();
-                    pathState = 1;
-                }
+                pathState = 1;
                 break;
-            case 1:
 
-                if (shooter.ShotsRemaining <= 0) {
+            case 1:
+                if (!follower.isBusy()) {
+                    shooter.shoot();
+                    pathTimer.reset();
                     pathState = 2;
                 }
                 break;
-           case 2:
-                ie.setPower(ieP);
-                follower.followPath(l1Pos, true);
-                if (!Schmovin()){
+
+            case 2:
+                if (shooter.ShotsRemaining == 0) {
+                    ie.setPower(ieP);
+                    follower.followPath(l1Pos, true);
+                    pathTimer.reset();
                     pathState = 3;
-                    }
+                }
                 break;
+
             case 3:
                 ie.setPower(ieP);
-                follower.followPath(intakeL12, true);
-                if (!Schmovin()){
+                if (!follower.isBusy()) {
+                    follower.followPath(intakeL12, true);
+                    pathTimer.reset();
                     pathState = 4;
                 }
                 break;
+
             case 4:
-                follower.followPath(score2, true);
-                if (!Schmovin()){
-                    shooter.shoot();
+                ie.setPower(ieP);
+                if (!follower.isBusy() || pathTimer.seconds() >= intake) {
+                    follower.followPath(score2, true);
+                    pathTimer.reset();
                     pathState = 5;
                 }
                 break;
-            case 5:
 
-                if (shooter.ShotsRemaining <= 0) {
+            case 5:
+                if (!follower.isBusy()) {
+                    shooter.shoot();
+                    pathTimer.reset();
                     pathState = 6;
                 }
                 break;
+
             case 6:
-                ie.setPower(ieP);
-                follower.followPath(L2Pre, true);
-                if (!Schmovin()){
-                    waitTimer.resetTimer();
+                if (shooter.ShotsRemaining <= 0) {
+                    ie.setPower(ieP);
+                    follower.followPath(L2Pre, true);
+                    pathTimer.reset();
                     pathState = 7;
                 }
                 break;
+
             case 7:
                 ie.setPower(ieP);
-                follower.followPath(L2, true);
-                if (!Schmovin()){
-                    waitTimer.resetTimer();
+                if (!follower.isBusy()) {
+                    follower.followPath(L2, true);
+                    pathTimer.reset();
                     pathState = 8;
                 }
                 break;
+
             case 8:
                 ie.setPower(ieP);
-                follower.followPath(L2score, true);
-                if (!Schmovin()){
-                    shooter.shoot();
-                    waitTimer.resetTimer();
+                if (!follower.isBusy()) {
+                    follower.followPath(L2score, true);
+                    pathTimer.reset();
                     pathState = 9;
                 }
                 break;
-            case 9:
 
-                if (shooter.ShotsRemaining <= 0) {
+            case 9:
+                ie.setPower(ieP);
+                if (!follower.isBusy()) {
+                    shooter.shoot();
+                    pathTimer.reset();
                     pathState = 10;
                 }
                 break;
-           /* case 9:
+
+            case 10:
+                if (shooter.ShotsRemaining <= 0) {
+                    pathState = 11;
+                }
+                break;
+
+            /*case 11:
                 ie.setPower(ieP);
                 follower.followPath(leverPre, true);
-                if (!Schmovin()){
+                if (!follower.isBusy()) {
                     waitTimer.resetTimer();
-                    pathState = 10;
-                }
-                break;
-              case 10:
-                follower.followPath(lever, true);
-                if (!Schmovin()){
-                    waitTimer.resetTimer();
-                pathState = 11;
-                }
-                break;
-            case 11:
-                if (waitTimer.getElapsedTime() >= wait){
                     pathState = 12;
                 }
-            break;
+                break;
+
             case 12:
-             follower.followPath(score, true);
-             if (!Schmovin()){
-                 shooter.shoot();
-                 pathState = 13;
-             }
-             break;
+                follower.followPath(lever, true);
+                if (!follower.isBusy()) {
+                    waitTimer.resetTimer();
+                    pathState = 13;
+                }
+                break;
+
             case 13:
-                if(shooter.ShotsRemaining <= 0){
+                if (waitTimer.getElapsedTime() >= wait) {
                     pathState = 14;
                 }
                 break;
-            case 14:ie.setPower(ieP);
-                follower.followPath(lever, true);
-                if (!Schmovin()){
-                    waitTimer.resetTimer();
+
+            case 14:
+                follower.followPath(score, true);
+                if (!follower.isBusy()) {
+                    shooter.shoot();
                     pathState = 15;
                 }
                 break;
-            case 15:ie.setPower(ieP);
-                if (waitTimer.getElapsedTime() >= wait){
+
+            case 15:
+                if (shooter.ShotsRemaining <= 0) {
                     pathState = 16;
-                    ie.setPower(ieP);
                 }
                 break;
+
             case 16:
                 ie.setPower(ieP);
-                follower.followPath(score, true);
-                if (!Schmovin()){
-                    shooter.shoot();
+                follower.followPath(lever, true);
+                if (!follower.isBusy()) {
+                    waitTimer.resetTimer();
                     pathState = 17;
                 }
                 break;
+
             case 17:
-                if(shooter.ShotsRemaining <= 0){
+                ie.setPower(ieP);
+                if (waitTimer.getElapsedTime() >= wait) {
                     pathState = 18;
+                    ie.setPower(ieP);
                 }
-                break;*/
+                break;
 
+            case 18:
+                ie.setPower(ieP);
+                follower.followPath(score, true);
+                if (!follower.isBusy()) {
+                    shooter.shoot();
+                    pathState = 19;
+                }
+                break;
 
+            case 19:
+                if (shooter.ShotsRemaining <= 0) {
+                    pathState = 20;
+                }
+                break;
+            */
         }
-    }
-
-    public boolean Schmovin() {
-        return Math.abs(follower.getHeadingError()) > .98 ||
-                !follower.atParametricEnd() ||
-                follower.getVelocity().getMagnitude() > 0.90 ||
-                Math.abs(follower.getAngularVelocity()) > .90;
     }
 
     public void buildPaths() {
@@ -235,39 +260,44 @@ public class Blue_Side_Pedro extends OpMode {
                 .setLinearHeadingInterpolation(line1PrePose.getHeading(), intake3OutsidePose.getHeading())
                 .build();
 
-        //intakeL13 = follower.pathBuilder()
-              //  .addPath(new BezierLine(intake2Pose, intake3OutsidePose))
-             //   .setLinearHeadingInterpolation(intake2Pose.getHeading(), intake3OutsidePose.getHeading())
-               // .build();
+        // intakeL13 = follower.pathBuilder()
+        //         .addPath(new BezierLine(intake2Pose, intake3OutsidePose))
+        //         .setLinearHeadingInterpolation(intake2Pose.getHeading(), intake3OutsidePose.getHeading())
+        //         .build();
 
         score2 = follower.pathBuilder()
                 .addPath(new BezierLine(intake3OutsidePose, scorePose))
                 .setLinearHeadingInterpolation(intake3OutsidePose.getHeading(), scorePose.getHeading())
                 .build();
+
         L2Pre = follower.pathBuilder()
                 .addPath(new BezierLine(scorePose, line2PrePose))
                 .setLinearHeadingInterpolation(scorePose.getHeading(), line2PrePose.getHeading())
                 .build();
+
         L2 = follower.pathBuilder()
-                .addPath(new BezierLine( line2PrePose, line2Pose))
+                .addPath(new BezierLine(line2PrePose, line2Pose))
                 .setLinearHeadingInterpolation(line2PrePose.getHeading(), line2Pose.getHeading())
                 .build();
+
         L2score = follower.pathBuilder()
-                .addPath(new BezierLine( line2Pose, scorePose))
+                .addPath(new BezierLine(line2Pose, scorePose))
                 .setLinearHeadingInterpolation(line2Pose.getHeading(), scorePose.getHeading())
                 .build();
+
         leverPre = follower.pathBuilder()
                 .addPath(new BezierLine(scorePose, leverPrePose))
                 .setLinearHeadingInterpolation(scorePose.getHeading(), leverPrePose.getHeading())
                 .build();
+
         lever = follower.pathBuilder()
                 .addPath(new BezierLine(leverPrePose, leverPose))
                 .setLinearHeadingInterpolation(leverPrePose.getHeading(), leverPose.getHeading())
                 .build();
+
         score = follower.pathBuilder()
                 .addPath(new BezierLine(leverPose, scorePose))
                 .setLinearHeadingInterpolation(leverPose.getHeading(), scorePose.getHeading())
                 .build();
-
     }
 }
