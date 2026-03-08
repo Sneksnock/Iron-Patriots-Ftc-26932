@@ -53,7 +53,7 @@ public class shooter {
     public static double LfeederP = 1.0;
     public static double RfeederP = 1.0;
     public static double LfeederT = 500;
-    public static double RfeederT = 550;
+    public static double RfeederT = 500;
     public static double ieP = .80;
     public static double off = -0.2;
     public static double offW = 0.0;
@@ -66,7 +66,7 @@ public class shooter {
     public static double CLOSE_VELOCITY = 1110;
     public static double FAR_VELOCITY = 1425;
     public static double VELOCITY_TOLERANCE = 20;
-    public static double SPIN_TIME = 750;
+    public static double SPIN_TIME = 500;
     public static double SPIN_TIMEFAR = 2000;
 
 

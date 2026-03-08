@@ -35,7 +35,7 @@ public class Blue_Side_Pedro extends OpMode {
 
 
     private  Pose startPose = new Pose(33.916, 126.968, (2.4196));
-    private Pose scorePose = new Pose(85, 133, (3.03));
+    private Pose scorePose = new Pose(85, 133, (3.1));
     private  Pose line1PrePose =  new Pose(54.25,88, 3.07);
     private Pose intake2Pose = new Pose(40, 86, 3.07);
     private Pose intake3OutsidePose = new Pose(29.75, 82.5,3.07);

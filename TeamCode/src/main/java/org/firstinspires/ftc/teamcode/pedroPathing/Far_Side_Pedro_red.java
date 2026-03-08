@@ -1,6 +1,9 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
+
 import static org.firstinspires.ftc.teamcode.shooter.ie;
 import static org.firstinspires.ftc.teamcode.shooter.ieP;
+import static org.firstinspires.ftc.teamcode.shooter.offW;
+
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
@@ -9,11 +12,10 @@ import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
-import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.shooter;
 
-@Autonomous(name = "Blue Far Side", group = "Examples")
-public class Far_Side_Pedro extends OpMode {
+@Autonomous(name = "RED Far Side", group = "Examples")
+public class Far_Side_Pedro_red extends OpMode {
     private shooter shooter;
     private Follower follower;
 
@@ -26,15 +28,15 @@ public class Far_Side_Pedro extends OpMode {
 
 
 
-    private  Pose startPose = new Pose(47.2, 7.3, (1.6));
-    private Pose scorePose = new Pose(69, 15, (2.05));
-    private  Pose line1PrePose =  new Pose(47.5,34.9, 3.07);
+    private  Pose startPose = new Pose(104, 4.5, (1.6));
+    private Pose scorePose = new Pose(85, 15, (1.15));
+    private  Pose line1PrePose =  new Pose(108,28, 0);
     private Pose intake2Pose = new Pose(27, 57.5, 3.07);
-    private Pose intake3OutsidePose = new Pose(20.5, 45.4,3.07);
+    private Pose intake3OutsidePose = new Pose(137, 42,0);
     private Pose leverPrePose = new Pose(25, 60, 2.56);
     private Pose leverPose = new Pose(19.0, 62.082, 2.56);
-    private Pose line2PrePose = new Pose(66, 35, 3.07);
-    private Pose line2Pose = new Pose(23, 57, 3.07);
+    private Pose line2PrePose = new Pose(83, 34, 0);
+    private Pose line2Pose = new Pose(93, 42, 0);
 
     private PathChain score1, l1Pos, intakeL12, intakeL13, score2, lever, score, leverPre, L2Pre, L2, L2score;
 
@@ -85,6 +87,7 @@ public class Far_Side_Pedro extends OpMode {
                 break;
             case 2:
                 ie.setPower(ieP);
+                follower.setMaxPower(0.85);
                 follower.followPath(l1Pos, true);
                 if (!Schmovin()){
                     pathState = 3;
@@ -95,6 +98,7 @@ public class Far_Side_Pedro extends OpMode {
                 follower.followPath(intakeL12, true);
                 if (!Schmovin()){
                     pathState = 4;
+                    follower.setMaxPower(1.0);
                 }
                 break;
             case 4:

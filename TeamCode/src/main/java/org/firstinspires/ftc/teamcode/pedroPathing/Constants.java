@@ -17,11 +17,11 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
-    .mass(10)//6.6
-            .forwardZeroPowerAcceleration(-54.11970040003361)
-            .lateralZeroPowerAcceleration(-38.34562420301424)
-            .translationalPIDFCoefficients(new PIDFCoefficients(0.015,0,0.0, 0.015))
-            .headingPIDFCoefficients(new PIDFCoefficients(1,0,0.0289,0.05) ) // 1, 0, 0.0289, 0.05
+    .mass(11.8)//10
+            .forwardZeroPowerAcceleration(-35.09838709861879)
+            .lateralZeroPowerAcceleration(-61.890598829238286)
+            .translationalPIDFCoefficients(new PIDFCoefficients(0.022,0,0.002, 0.0246))
+            .headingPIDFCoefficients(new PIDFCoefficients(0.55,0,0.002,0.0265) ) // 1, 0, 0.0289, 0.05
             .centripetalScaling(0.0004375);
     public static MecanumConstants driveConstants = new MecanumConstants()
             .maxPower(1)
@@ -34,8 +34,8 @@ public class Constants {
             .rightFrontMotorDirection(DcMotorEx.Direction.FORWARD)
             .rightRearMotorDirection(DcMotorEx.Direction.FORWARD)
             //.xVelocity(61.93746491679954)
-            .xVelocity(80)
-            .yVelocity(57.64951835091658);
+            .xVelocity(78.5)
+            .yVelocity(62.356430894746566);
 
     public static PinpointConstants localizerConstants = new PinpointConstants()
             .forwardPodY(-168/2.54)
@@ -46,9 +46,9 @@ public class Constants {
             .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
             .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD);
 
-    public static PathConstraints pathConstraints = new PathConstraints(0.95, 1000,
-            999999999, 99999999, 0,
-            1.60, 10, 0.98);
+    public static PathConstraints pathConstraints = new PathConstraints(0.95, 10,
+            10, 10, 0,
+            3.0, 10, 0.98);
     public static Follower createFollower(HardwareMap hardwareMap) {
         return new FollowerBuilder(followerConstants, hardwareMap)
                 .pathConstraints(pathConstraints)

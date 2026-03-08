@@ -22,13 +22,13 @@ public class Red_Side_Pedro extends OpMode {
     private boolean shotRequested = false;
 
     private final Pose startPose = new Pose(124.311, 123.794, 0.739);
-    private final Pose scorePose = new Pose(72, 129.5, 0.2);
+    private final Pose scorePose = new Pose(72, 129.5, 0.17);
     private final Pose line1PrePose = new Pose(102.5, 86.75, 0.0);
     private final Pose intakeline1Pose = new Pose(128.0, 81.0, 0.02);
     private final Pose line2PrePose = new Pose( 102.5, 61.5, 0.06);
 
     //private final Pose intake3PrePose = new Pose(102.5, 39.5, 0.02);
-    private final Pose intakeline2Pose = new Pose (131.5, 56.0, 0.01);
+    private final Pose intakeline2Pose = new Pose (138, 56.0, 0.01);
     private final Pose leverPrePose = new Pose (139, 60, 0.03);
     private final Pose leverPose = new Pose (108, 66, 2.56);
 
