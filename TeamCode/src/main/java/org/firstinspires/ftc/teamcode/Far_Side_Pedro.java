@@ -10,22 +10,24 @@ import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.shooter;
 
 @Autonomous(name = "Blue Far Side", group = "Examples")
 public class Far_Side_Pedro extends OpMode {
-
     private shooter shooter;
     private Follower follower;
 
-    public Timer pathTimer, opModeTimer, waitTimer;
+    public Timer opModeTimer, waitTimer;
+    private ElapsedTime poseTimer;
 
     private int pathState = 0;
-    private int wait = 1500;
+    private static final double POSE_TIMEOUT = 4.0;
 
-    private Pose startPose = new Pose(47.2, 7.3, (1.6));
-    private Pose scorePose = new Pose(69, 15, (2.05));
+    /// ---------- POSE DATA ----------
+    private Pose startPose = new Pose(47.2, 7.3, 1.6);
+    private Pose scorePose = new Pose(69, 15, 2.05);
     private Pose line1PrePose = new Pose(47.5, 34.9, 3.07);
     private Pose intake2Pose = new Pose(27, 57.5, 3.07);
     private Pose intake3OutsidePose = new Pose(20.5, 45.4, 3.07);
@@ -38,179 +40,212 @@ public class Far_Side_Pedro extends OpMode {
 
     @Override
     public void init() {
-
         shooter = new shooter();
-
-        pathTimer = new Timer();
         opModeTimer = new Timer();
         waitTimer = new Timer();
+        poseTimer = new ElapsedTime();
 
-        pathTimer.resetTimer();
         opModeTimer.resetTimer();
         waitTimer.resetTimer();
+        poseTimer.reset();
 
         shooter.init(hardwareMap);
-
         follower = Constants.createFollower(hardwareMap);
-
         buildPaths();
-
         follower.setStartingPose(startPose);
+        follower.setMaxPower(1.0);
     }
 
     @Override
     public void loop() {
-
         follower.update();
         shooter.update();
 
         autonomousPathUpdate();
 
+        /// ----------- TELEMETRY ----------
         telemetry.addData("Path State", pathState);
         telemetry.addData("Shooter State", shooter.getState());
         telemetry.addData("Follower Busy", follower.isBusy());
         telemetry.addData("Velocity", follower.getVelocity());
         telemetry.addData("Shots Remaining", shooter.ShotsRemaining);
+        telemetry.addData("Pose Timer", poseTimer.seconds());
         telemetry.update();
     }
 
-    public void autonomousPathUpdate() {
+    private void startPath(PathChain path, boolean holdEnd) {
+        follower.followPath(path, holdEnd);
+        poseTimer.reset();
+    }
 
+    private boolean poseDone() {
+        return !follower.isBusy() || poseTimer.seconds() >= POSE_TIMEOUT;
+    }
+
+    /// ---------- PATHING ----------
+    public void autonomousPathUpdate() {
         switch (pathState) {
 
+            // Drive to first score
             case 0:
-                follower.followPath(score1, true);
+                follower.setMaxPower(1.0);
+                startPath(score1, true);
                 pathState = 1;
                 break;
 
+            // Wait until at first score
             case 1:
-
-                if (!follower.isBusy()) {
-
-                    shooter.shootFar();
-
+                if (poseDone()) {
                     pathState = 2;
                 }
-
                 break;
 
+            // Shoot first volley
             case 2:
+                shooter.shootFar();
+                pathState = 3;
+                break;
 
-                if (shooter.ShotsRemaining <= 0) {
-
-                    ie.setPower(ieP);
-
-                //    follower.followPath(l1Pos, true);
-
-                    pathState = 3;
-                }
-
-            /*    break;
-
+            // Wait until first volley finishes
             case 3:
-
-                ie.setPower(ieP);
-
-                if (!follower.isBusy()) {
-
-                    follower.followPath(intakeL12, true);
-
+                if (shooter.ShotsRemaining <= 0) {
                     pathState = 4;
                 }
-
                 break;
 
+            // Drive to first pre-intake
             case 4:
-
                 ie.setPower(ieP);
-
-                if (!follower.isBusy()) {
-
-                    follower.followPath(score2, true);
-
-                    pathState = 5;
-                }
-
+                follower.setMaxPower(1.0);
+                startPath(l1Pos, true);
+                pathState = 5;
                 break;
 
+            // Wait until at first pre-intake
             case 5:
-
-                if (!follower.isBusy()) {
-
-                    shooter.shootFar();
-
+                ie.setPower(ieP);
+                if (poseDone()) {
                     pathState = 6;
                 }
-
                 break;
 
+            // Drive through first intake
             case 6:
-
-                if (shooter.ShotsRemaining <= 0) {
-
-                    ie.setPower(ieP);
-
-                    follower.followPath(L2Pre, true);
-
-                    pathState = 7;
-                }
-
+                ie.setPower(ieP);
+                follower.setMaxPower(0.75);
+                startPath(intakeL12, true);
+                pathState = 7;
                 break;
 
+            // Wait until first intake finishes
             case 7:
-
                 ie.setPower(ieP);
-
-                if (!follower.isBusy()) {
-
-                    follower.followPath(L2, true);
-
+                if (poseDone()) {
+                    follower.setMaxPower(1.0);
                     pathState = 8;
                 }
-
                 break;
 
+            // Return to score second volley
             case 8:
-
                 ie.setPower(ieP);
-
-                if (!follower.isBusy()) {
-
-                    follower.followPath(L2score, true);
-
-                    pathState = 9;
-                }
-
+                follower.setMaxPower(1.0);
+                startPath(score2, true);
+                pathState = 9;
                 break;
 
+            // Wait until back at score
             case 9:
-
                 ie.setPower(ieP);
-
-                if (!follower.isBusy()) {
-
-                    shooter.shootFar();
-
+                if (poseDone()) {
                     pathState = 10;
                 }
-
                 break;
 
+            // Shoot second volley
             case 10:
+                shooter.shootFar();
+                pathState = 11;
+                break;
 
+            // Wait until second volley finishes
+            case 11:
                 if (shooter.ShotsRemaining <= 0) {
-
-                    pathState = 11;
+                    pathState = 12;
                 }
+                break;
 
-                break; */
+            // Drive to second pre-intake
+            case 12:
+                ie.setPower(ieP);
+                follower.setMaxPower(1.0);
+                startPath(L2Pre, true);
+                pathState = 13;
+                break;
 
+            // Wait until at second pre-intake
+            case 13:
+                ie.setPower(ieP);
+                if (poseDone()) {
+                    pathState = 14;
+                }
+                break;
+
+            // Drive through second intake
+            case 14:
+                ie.setPower(ieP);
+                follower.setMaxPower(0.75);
+                startPath(L2, true);
+                pathState = 15;
+                break;
+
+            // Wait until second intake finishes
+            case 15:
+                ie.setPower(ieP);
+                if (poseDone()) {
+                    follower.setMaxPower(1.0);
+                    pathState = 16;
+                }
+                break;
+
+            // Return to score third volley
+            case 16:
+                ie.setPower(ieP);
+                follower.setMaxPower(1.0);
+                startPath(L2score, true);
+                pathState = 17;
+                break;
+
+            // Wait until back at score
+            case 17:
+                ie.setPower(ieP);
+                if (poseDone()) {
+                    pathState = 18;
+                }
+                break;
+
+            // Shoot third volley
+            case 18:
+                shooter.shootFar();
+                pathState = 19;
+                break;
+
+            // Wait until third volley finishes
+            case 19:
+                if (shooter.ShotsRemaining <= 0) {
+                    pathState = 20;
+                }
+                break;
+
+            // Done
+            case 20:
+                ie.setPower(0);
+                follower.setMaxPower(1.0);
+                break;
         }
-
     }
 
     public void buildPaths() {
-
         score1 = follower.pathBuilder()
                 .addPath(new BezierLine(startPose, scorePose))
                 .setLinearHeadingInterpolation(startPose.getHeading(), scorePose.getHeading())
@@ -260,7 +295,5 @@ public class Far_Side_Pedro extends OpMode {
                 .addPath(new BezierLine(leverPose, scorePose))
                 .setLinearHeadingInterpolation(leverPose.getHeading(), scorePose.getHeading())
                 .build();
-
     }
-
 }
