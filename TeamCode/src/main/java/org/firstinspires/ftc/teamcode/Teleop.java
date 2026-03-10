@@ -1,10 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.gamepad1;
 import static org.firstinspires.ftc.teamcode.shooter.ieP;
 
-
-import android.net.http.InlineExecutionProhibitedException;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
@@ -15,7 +12,6 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -26,6 +22,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 public class Teleop extends LinearOpMode {
 
     /// ---------------- HARDWARE ----------------
+     private FOuR_EYeS vision;
     private Follower follower;
     private DcMotorEx Lf, Rf, Lb, Rb;
     private DcMotorEx Lsh, Rsh;
@@ -33,7 +30,8 @@ public class Teleop extends LinearOpMode {
     private CRServo Lfeeder, Rfeeder;
     private GoBildaPinpointDriver odo;
     private shooter shooter;
-    private boolean leftTriggerWasDown = false;
+
+    /// ---------------- DRIVER STATE ----------------
     private boolean ballingOut = false;
     private boolean intakeToggle = false;
     private boolean intakeReverseToggle = false;
@@ -42,30 +40,39 @@ public class Teleop extends LinearOpMode {
 
     private boolean slowModeToggle = false;
     private boolean slowMode = false;
-    private boolean LfToggle = false;
-    private boolean LfLoad = false;
 
-    private boolean diverterToggle = false;
-    private boolean diverterState = false;
-    private boolean firing = false;
-    private long firingStartTime;
-    private ElapsedTime stateTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
-    private shooter.ShootingState shootingState;
-
-
+    /// ---------------- EDGE DETECTION ----------------
+    private boolean lastLeftTriggerPressed = false;
+    private boolean lastRightTriggerPressed = false;
 
     /// ---------------- POSES ----------------
+    /// ---------- TODO: SHOOTING POSES ----------
+    /// Replace this placeholder / current pose with your final tested teleop shooting poses.
+    /// Blue close should come from Blue_Side_Pedro scorePose
+    /// Blue far should come from Far_Side_Pedro scorePose
+    /// Red close should come from Red_Side_Pedro scorePose
+    /// Red far should come from Far_Side_Pedro_red scorePose
     private final Pose scorePose = new Pose(71, 80.281, 2.3);
 
     /// ---------------- PATHS ----------------
     private PathChain score1;
+
     /// ---------------- LIVE POSE ----------------
     private Pose currentPose = new Pose(0, 0, 0);
+
+    /// ---------------- TODO: LIMELIGHT ----------
+    /// When FOuR_EYeS is integrated, add:
+    /// private FOuR_EYeS vision;
+    ///
+    /// Then use it for:
+    /// - AprilTag heading lock
+    /// - smart shot distance
+    /// - alliance tag filtering
 
     @Override
     public void runOpMode() {
 
-        /// ---------------- Hardware ----------------
+        /// ---------------- HARDWARE ----------------
         follower = Constants.createFollower(hardwareMap);
 
         Lf = hardwareMap.get(DcMotorEx.class, "left_front_drive");
@@ -79,20 +86,22 @@ public class Teleop extends LinearOpMode {
         Lfeeder = hardwareMap.get(CRServo.class, "left_feeder");
         Rfeeder = hardwareMap.get(CRServo.class, "right_feeder");
 
-
         Rsh.setDirection(DcMotorEx.Direction.REVERSE);
         Rfeeder.setDirection(DcMotorSimple.Direction.REVERSE);
         ie.setDirection(DcMotorSimple.Direction.REVERSE);
         Lsh.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         Rsh.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+
         odo = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
+        vision = new FOuR_EYeS();
+        vision.init(hardwareMap);
 
         Lf.setDirection(DcMotorSimple.Direction.REVERSE);
         Lb.setDirection(DcMotorSimple.Direction.REVERSE);
         Rsh.setDirection(DcMotorSimple.Direction.REVERSE);
         ie.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        /// ---------------- odometry ----------------
+        /// ---------------- ODOMETRY ----------------
         odo.setOffsets(-84.0, -168.0, DistanceUnit.MM);
         odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
         odo.setEncoderDirections(
@@ -101,45 +110,60 @@ public class Teleop extends LinearOpMode {
         );
         odo.resetPosAndIMU();
 
-        waitForStart();
-
-
-      shooter = new shooter();
+        shooter = new shooter();
         shooter.init(hardwareMap);
 
-       odo.resetPosAndIMU();
-        Pose2D startingPositon = new Pose2D(DistanceUnit.INCH, 22.583, 60.082, AngleUnit.RADIANS, 2.566);
+        /// ---------------- TODO: LIMELIGHT INIT ----------
+        /// vision = new FOuR_EYeS();
+        /// vision.init(hardwareMap);
+
+        waitForStart();
+
+        odo.resetPosAndIMU();
+        Pose2D startingPositon = new Pose2D(
+                DistanceUnit.INCH,
+                22.583,
+                60.082,
+                AngleUnit.RADIANS,
+                2.566
+        );
         odo.setPosition(startingPositon);
 
-        while (opModeIsActive()){
+        while (opModeIsActive()) {
             follower.update();
-                shooter.update();
-            // live pose
+            shooter.update();
+            vision.update();
+
+            /// ---------------- TODO: LIMELIGHT UPDATE ----------
+            /// vision.update();
+
             currentPose = follower.getPose();
 
-           /* // ----- RIGHT TRIGGER: go to score pose, then shoot -----
+            /// ---------- TODO: SCORE ASSIST ----------
+            /// This old score-pose path block is still commented out.
+            /// Later, this can be replaced with:
+            /// - nearest shooting pose selection
+            /// - move to pose
+            /// - limelight aim
+            /// - smart fire
+
+            /*
             boolean leftTriggerDown = gamepad1.left_trigger >= 0.02;
 
-            // on PRESS (not hold)
             if (leftTriggerDown && !leftTriggerWasDown && !ballingOut) {
                 ballingOut = true;
 
-                buildPaths();              // currentPose -> scorePose
+                buildPaths();
                 follower.followPath(score1);
             }
             leftTriggerWasDown = leftTriggerDown;
 
-            // when finished, shoot once
             if (ballingOut && !follower.isBusy()) {
                 ballingOut = false;
                 shootAll();
-//            }*/
-            // DRIVER CONTROL LOCKOUT while the path runs
-            /*if (ballingOut && follower.isBusy()) {
-                moveRobot();
-            } else if (!ballingOut && !follower.isBusy()) {
-                moveRobot();
-            }*/
+            }
+            */
+
             moveRobot();
 
             telemetry.addData("status", "Running");
@@ -148,13 +172,17 @@ public class Teleop extends LinearOpMode {
             telemetry.addData("Pedro Heading Deg", Math.toDegrees(currentPose.getHeading()));
             telemetry.addData("ballingOut", ballingOut);
             telemetry.addData("follower busy", follower.isBusy());
+            telemetry.addData("shooter busy", shooter.isBusy());
+            telemetry.addData("shooter state", shooter.getState());
+            telemetry.addData("shots remaining", shooter.ShotsRemaining);
+            telemetry.addData("Vision Target", vision.hasValidTarget());
+            telemetry.addData("Vision Yaw Error", vision.getYawErrorDeg());
+            telemetry.addData("Vision Distance", vision.getDistanceInches());
             telemetry.update();
-
         }
-
     }
 
-    /// ---------------- controls ----------------
+    /// ---------------- CONTROLS ----------------
     public void moveRobot() {
         double forward = -gamepad1.left_stick_x;
         double strafe = -gamepad1.left_stick_y;
@@ -173,8 +201,21 @@ public class Teleop extends LinearOpMode {
         double globalStrafe = -forward * sinAngle + strafe * cosAngle;
         double globalForward = forward * cosAngle + strafe * sinAngle;
 
-        double[] newWheelSpeeds = new double[4];
+        /// ---------------- SLOW MODE ----------------
+        if (gamepad1.right_stick_button && !slowModeToggle) {
+            slowMode = !slowMode;
+            slowModeToggle = true;
+        } else if (!gamepad1.right_stick_button) {
+            slowModeToggle = false;
+        }
 
+        if (slowMode) {
+            globalForward *= 0.4;
+            globalStrafe *= 0.4;
+            rotate *= 0.4;
+        }
+
+        double[] newWheelSpeeds = new double[4];
         newWheelSpeeds[0] = globalForward + globalStrafe + rotate;
         newWheelSpeeds[1] = globalForward - globalStrafe - rotate;
         newWheelSpeeds[2] = globalForward - globalStrafe + rotate;
@@ -185,9 +226,10 @@ public class Teleop extends LinearOpMode {
         Lb.setPower(newWheelSpeeds[2]);
         Rb.setPower(newWheelSpeeds[3]);
 
-        telemetry.addData("Forward Speed : ", globalForward);
-        telemetry.addData("Strafe Speed :", globalStrafe);
-        // Intake toggle
+        telemetry.addData("Forward Speed", globalForward);
+        telemetry.addData("Strafe Speed", globalStrafe);
+
+        /// ---------------- INTAKE TOGGLE ----------------
         if (gamepad1.left_stick_button && !intakeToggle && !intakeReverseState) {
             intakeState = !intakeState;
             intakeToggle = true;
@@ -195,7 +237,7 @@ public class Teleop extends LinearOpMode {
             intakeToggle = false;
         }
 
-        // Intake reverse toggle
+        /// ---------------- INTAKE REVERSE TOGGLE ----------------
         if (gamepad1.dpad_left && !intakeReverseToggle && !intakeState) {
             intakeReverseState = !intakeReverseState;
             intakeReverseToggle = true;
@@ -203,53 +245,45 @@ public class Teleop extends LinearOpMode {
             intakeReverseToggle = false;
         }
 
-        if(intakeState){
+        if (intakeState) {
             ie.setPower(ieP);
-        }else if(intakeReverseState){
+        } else if (intakeReverseState) {
             ie.setPower(-1);
-        }else{
+        } else {
             ie.setPower(0);
         }
 
-        // Slow mode toggle
-        if (gamepad1.right_stick_button && !slowModeToggle) {
-            slowMode = !slowMode;
-            slowModeToggle = true;
-        } else if (!gamepad1.right_stick_button) {
-            slowModeToggle = false;
-        }
-boolean lastLeftTrigger = false;
+        /// ---------------- SHOOTER REQUESTS ----------------
         boolean leftTriggerPressed = gamepad1.left_trigger > 0.3;
-        if (leftTriggerPressed && !lastLeftTrigger) {
-            shooter.shoot();
+        if (leftTriggerPressed && !lastLeftTriggerPressed) {
+            shooter.requestCloseShot();
         }
-        boolean lastRightTrigger = false;
+        lastLeftTriggerPressed = leftTriggerPressed;
+
         boolean rightTriggerPressed = gamepad1.right_trigger > 0.3;
-        if (rightTriggerPressed && !lastRightTrigger) {
-            shooter.shootFar();
+        if (rightTriggerPressed && !lastRightTriggerPressed) {
+            shooter.requestFarShot();
+        }
+        lastRightTriggerPressed = rightTriggerPressed;
+
+        /// ---------------- MANUAL FEEDER CONTROL ----------------
+        /// These are manual overrides. They should only be used when not auto-shooting.
+        if (gamepad1.left_bumper) {
+            shooter.setLeftFeederManual(1.0);
+        } else if (!shooter.isBusy()) {
+            shooter.setLeftFeederManual(0.0);
         }
 
+        if (gamepad1.right_bumper) {
+            shooter.setRightFeederManual(1.0);
+        } else if (!shooter.isBusy()) {
+            shooter.setRightFeederManual(0.0);
+        }
 
-        // feeder toggle (L1/R1)
-        if (gamepad1.left_bumper){
-            Lfeeder.setPower(1.0);
-        } else if (gamepad1.left_bumper){
-            Lfeeder.setPower(0.0);
-        }
-        if (gamepad1.right_bumper){
-            Rfeeder.setPower(1.0);
-        } else if (gamepad1.right_bumper){
-            Rfeeder.setPower(0.0);
-        }
-        // Emergency stop
+        /// ---------------- EMERGENCY STOP ----------------
         if (gamepad1.dpad_down) {
-            Lsh.setPower(0.0);
-            Rsh.setPower(0.0);
-            Lfeeder.setPower(0.0);
-            Rfeeder.setPower(0.0);
-            Rsh.setPower(0.0);
-            shooter.ShotsRemaining = 0;
-            shootingState = org.firstinspires.ftc.teamcode.shooter.ShootingState.IDLE;
+            shooter.cancelShot();
+            ie.setPower(0.0);
         }
     }
 
@@ -259,6 +293,5 @@ boolean lastLeftTrigger = false;
                 .addPath(new BezierLine(currentPose, scorePose))
                 .setLinearHeadingInterpolation(currentPose.getHeading(), scorePose.getHeading())
                 .build();
-
     }
 }

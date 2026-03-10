@@ -1,12 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
-import static org.firstinspires.ftc.teamcode.shooter.ShootingState.IDLE;
-import static org.firstinspires.ftc.teamcode.shooter.ShootingState.IDLE2;
 import static org.firstinspires.ftc.teamcode.shooter.ie;
 import static org.firstinspires.ftc.teamcode.shooter.ieP;
-import static org.firstinspires.ftc.teamcode.shooter.off;
-import static org.firstinspires.ftc.teamcode.shooter.offW;
-import static org.firstinspires.ftc.teamcode.shooter.shootingState;
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
@@ -26,16 +21,14 @@ public class Blue_Side_Pedro extends OpMode {
     private Follower follower;
 
     public Timer opModeTimer, waitTimer;
-    private ElapsedTime pathTimer;
+    private ElapsedTime poseTimer;
 
     private int pathState = 0;
-    private double wait = 1.5;
-    private double MoveBalling = 2;
-    private double intake = 2.5;
-    private boolean shotRequested = false;
+    private static final double POSE_TIMEOUT = 4.0;
 
-    private Pose startPose = new Pose(33.916, 126.968, (2.4196));
-    private Pose scorePose = new Pose(85, 133, (3.1));
+    /// ---------- POSE DATA ----------
+    private Pose startPose = new Pose(33.916, 126.968, 2.4196);
+    private Pose scorePose = new Pose(85, 133, 3.1);
     private Pose line1PrePose = new Pose(54.25, 88, 3.07);
     private Pose intake2Pose = new Pose(40, 86, 3.07);
     private Pose intake3OutsidePose = new Pose(29.75, 82.5, 3.07);
@@ -49,18 +42,20 @@ public class Blue_Side_Pedro extends OpMode {
     @Override
     public void init() {
         shooter = new shooter();
-        pathTimer = new ElapsedTime();
         opModeTimer = new Timer();
         waitTimer = new Timer();
+        poseTimer = new ElapsedTime();
 
-        pathTimer.reset();
         opModeTimer.resetTimer();
         waitTimer.resetTimer();
+        poseTimer.reset();
 
         shooter.init(hardwareMap);
         follower = Constants.createFollower(hardwareMap);
+
         buildPaths();
         follower.setStartingPose(startPose);
+        follower.setMaxPower(1.0);
     }
 
     @Override
@@ -70,177 +65,185 @@ public class Blue_Side_Pedro extends OpMode {
 
         autonomousPathUpdate();
 
+        /// ----------- TELEMETRY ----------
         telemetry.addData("Path State", pathState);
         telemetry.addData("Shooter State", shooter.getState());
         telemetry.addData("Follower Busy", follower.isBusy());
         telemetry.addData("Velocity", follower.getVelocity());
         telemetry.addData("Shots Remaining", shooter.ShotsRemaining);
-        telemetry.addData("Path Timer", pathTimer.seconds());
+        telemetry.addData("Pose Timer", poseTimer.seconds());
         telemetry.update();
     }
 
+    private void startPath(PathChain path, boolean holdEnd) {
+        follower.followPath(path, holdEnd);
+        poseTimer.reset();
+    }
+
+    private boolean poseDone() {
+        return !follower.isBusy() || poseTimer.seconds() >= POSE_TIMEOUT;
+    }
+
+    /// ---------- PATHING ----------
     public void autonomousPathUpdate() {
         switch (pathState) {
 
+            // Drive to first score
             case 0:
-                follower.followPath(score1, true);
+                follower.setMaxPower(1.0);
+                startPath(score1, true);
                 pathState = 1;
                 break;
 
+            // Wait until at first score
             case 1:
-                if (!follower.isBusy()) {
-                    shooter.shoot();
-                    pathTimer.reset();
+                if (poseDone()) {
                     pathState = 2;
                 }
                 break;
 
+            // Shoot first volley
             case 2:
-                if (shooter.ShotsRemaining == 0) {
-                    ie.setPower(ieP);
-                    follower.followPath(l1Pos, true);
-                    pathTimer.reset();
-                    pathState = 3;
-                }
+                shooter.shoot();
+                pathState = 3;
                 break;
 
+            // Wait until first volley finishes
             case 3:
-                ie.setPower(ieP);
-                if (!follower.isBusy()) {
-                    follower.followPath(intakeL12, true);
-                    pathTimer.reset();
+                if (shooter.ShotsRemaining <= 0) {
                     pathState = 4;
                 }
                 break;
 
+            // Drive to first line pre-intake
             case 4:
                 ie.setPower(ieP);
-                if (!follower.isBusy() || pathTimer.seconds() >= intake) {
-                    follower.followPath(score2, true);
-                    pathTimer.reset();
-                    pathState = 5;
-                }
+                follower.setMaxPower(1.0);
+                startPath(l1Pos, true);
+                pathState = 5;
                 break;
 
+            // Wait until at first line pre-intake
             case 5:
-                if (!follower.isBusy()) {
-                    shooter.shoot();
-                    pathTimer.reset();
+                ie.setPower(ieP);
+                if (poseDone()) {
                     pathState = 6;
                 }
                 break;
 
+            // Drive through first intake
             case 6:
-                if (shooter.ShotsRemaining <= 0) {
-                    ie.setPower(ieP);
-                    follower.followPath(L2Pre, true);
-                    pathTimer.reset();
-                    pathState = 7;
-                }
+                ie.setPower(ieP);
+                follower.setMaxPower(0.75);
+                startPath(intakeL12, true);
+                pathState = 7;
                 break;
 
+            // Wait until first intake path finishes
             case 7:
                 ie.setPower(ieP);
-                if (!follower.isBusy()) {
-                    follower.followPath(L2, true);
-                    pathTimer.reset();
+                if (poseDone()) {
+                    follower.setMaxPower(1.0);
                     pathState = 8;
                 }
                 break;
 
+            // Return to score second volley
             case 8:
                 ie.setPower(ieP);
-                if (!follower.isBusy()) {
-                    follower.followPath(L2score, true);
-                    pathTimer.reset();
-                    pathState = 9;
-                }
+                follower.setMaxPower(1.0);
+                startPath(score2, true);
+                pathState = 9;
                 break;
 
+            // Wait until back at score
             case 9:
                 ie.setPower(ieP);
-                if (!follower.isBusy()) {
-                    shooter.shoot();
-                    pathTimer.reset();
+                if (poseDone()) {
                     pathState = 10;
                 }
                 break;
 
+            // Shoot second volley
             case 10:
-                if (shooter.ShotsRemaining <= 0) {
-                    pathState = 11;
-                }
+                shooter.shoot();
+                pathState = 11;
                 break;
 
-            /*case 11:
-                ie.setPower(ieP);
-                follower.followPath(leverPre, true);
-                if (!follower.isBusy()) {
-                    waitTimer.resetTimer();
+            // Wait until second volley finishes
+            case 11:
+                if (shooter.ShotsRemaining <= 0) {
                     pathState = 12;
                 }
                 break;
 
+            // Drive to second line pre-intake
             case 12:
-                follower.followPath(lever, true);
-                if (!follower.isBusy()) {
-                    waitTimer.resetTimer();
-                    pathState = 13;
-                }
+                ie.setPower(ieP);
+                follower.setMaxPower(1.0);
+                startPath(L2Pre, true);
+                pathState = 13;
                 break;
 
+            // Wait until at second line pre-intake
             case 13:
-                if (waitTimer.getElapsedTime() >= wait) {
+                ie.setPower(ieP);
+                if (poseDone()) {
                     pathState = 14;
                 }
                 break;
 
+            // Drive through second intake
             case 14:
-                follower.followPath(score, true);
-                if (!follower.isBusy()) {
-                    shooter.shoot();
-                    pathState = 15;
-                }
+                ie.setPower(ieP);
+                follower.setMaxPower(0.75);
+                startPath(L2, true);
+                pathState = 15;
                 break;
 
+            // Wait until second intake path finishes
             case 15:
-                if (shooter.ShotsRemaining <= 0) {
+                ie.setPower(ieP);
+                if (poseDone()) {
+                    follower.setMaxPower(1.0);
                     pathState = 16;
                 }
                 break;
 
+            // Return to score third volley
             case 16:
                 ie.setPower(ieP);
-                follower.followPath(lever, true);
-                if (!follower.isBusy()) {
-                    waitTimer.resetTimer();
-                    pathState = 17;
-                }
+                follower.setMaxPower(1.0);
+                startPath(L2score, true);
+                pathState = 17;
                 break;
 
+            // Wait until back at score
             case 17:
                 ie.setPower(ieP);
-                if (waitTimer.getElapsedTime() >= wait) {
+                if (poseDone()) {
                     pathState = 18;
-                    ie.setPower(ieP);
                 }
                 break;
 
+            // Shoot third volley
             case 18:
-                ie.setPower(ieP);
-                follower.followPath(score, true);
-                if (!follower.isBusy()) {
-                    shooter.shoot();
-                    pathState = 19;
-                }
+                shooter.shoot();
+                pathState = 19;
                 break;
 
+            // Wait until third volley finishes
             case 19:
                 if (shooter.ShotsRemaining <= 0) {
                     pathState = 20;
                 }
                 break;
-            */
+
+            // Done
+            case 20:
+                ie.setPower(0);
+                follower.setMaxPower(1.0);
+                break;
         }
     }
 
@@ -259,11 +262,6 @@ public class Blue_Side_Pedro extends OpMode {
                 .addPath(new BezierLine(line1PrePose, intake3OutsidePose))
                 .setLinearHeadingInterpolation(line1PrePose.getHeading(), intake3OutsidePose.getHeading())
                 .build();
-
-        // intakeL13 = follower.pathBuilder()
-        //         .addPath(new BezierLine(intake2Pose, intake3OutsidePose))
-        //         .setLinearHeadingInterpolation(intake2Pose.getHeading(), intake3OutsidePose.getHeading())
-        //         .build();
 
         score2 = follower.pathBuilder()
                 .addPath(new BezierLine(intake3OutsidePose, scorePose))

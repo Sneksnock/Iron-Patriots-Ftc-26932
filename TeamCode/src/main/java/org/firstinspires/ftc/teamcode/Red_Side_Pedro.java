@@ -10,6 +10,7 @@ import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
@@ -19,16 +20,17 @@ public class Red_Side_Pedro extends OpMode {
     private Follower follower;
     private shooter shooter;
     private Timer opModeTimer, waitTimer;
+    private ElapsedTime poseTimer;
 
     private int pathState = 0;
-/// ---------- POSE DATA ----------
+    private static final double POSE_TIMEOUT = 4.0;
+
+    /// ---------- POSE DATA ----------
     private final Pose startPose = new Pose(124.311, 123.794, 0.739);
     private final Pose scorePose = new Pose(72, 129.5, 0.17);
     private final Pose line1PrePose = new Pose(102.5, 86.75, 0.0);
     private final Pose intakeline1Pose = new Pose(128.0, 81.0, 0.02);
     private final Pose line2PrePose = new Pose(102.5, 61.5, 0.06);
-
-    // private final Pose intake3PrePose = new Pose(102.5, 39.5, 0.02);
     private final Pose intakeline2Pose = new Pose(138, 56.0, 0.01);
     private final Pose leverPrePose = new Pose(139, 60, 0.03);
     private final Pose leverPose = new Pose(108, 66, 2.56);
@@ -39,8 +41,11 @@ public class Red_Side_Pedro extends OpMode {
     public void init() {
         opModeTimer = new Timer();
         waitTimer = new Timer();
+        poseTimer = new ElapsedTime();
+
         opModeTimer.resetTimer();
         waitTimer.resetTimer();
+        poseTimer.reset();
 
         follower = Constants.createFollower(hardwareMap);
         buildPaths();
@@ -48,6 +53,7 @@ public class Red_Side_Pedro extends OpMode {
 
         shooter = new shooter();
         shooter.init(hardwareMap);
+        follower.setMaxPower(1.0);
     }
 
     @Override
@@ -56,14 +62,25 @@ public class Red_Side_Pedro extends OpMode {
         shooter.update();
 
         autonomousPathUpdate();
-/// ----------- TELEMETRY ----------
+
+        /// ----------- TELEMETRY ----------
         telemetry.addData("Path State", pathState);
         telemetry.addData("Shooter State", shooter.getState());
         telemetry.addData("Follower Busy", follower.isBusy());
         telemetry.addData("At Parametric End", follower.atParametricEnd());
         telemetry.addData("Velocity", follower.getVelocity());
         telemetry.addData("Shots", shooter.ShotsRemaining);
+        telemetry.addData("Pose Timer", poseTimer.seconds());
         telemetry.update();
+    }
+
+    private void startPath(PathChain path, boolean holdEnd) {
+        follower.followPath(path, holdEnd);
+        poseTimer.reset();
+    }
+
+    private boolean poseDone() {
+        return !follower.isBusy() || poseTimer.seconds() >= POSE_TIMEOUT;
     }
 
     /// ---------- PATHING ----------
@@ -72,13 +89,14 @@ public class Red_Side_Pedro extends OpMode {
 
             // Drive to first score
             case 0:
-                follower.followPath(score1, true);
+                follower.setMaxPower(1.0);
+                startPath(score1, true);
                 pathState = 1;
                 break;
 
             // Wait until at first score
             case 1:
-                if (!follower.isBusy()) {
+                if (poseDone()) {
                     pathState = 2;
                 }
                 break;
@@ -99,14 +117,15 @@ public class Red_Side_Pedro extends OpMode {
             // Drive to first pre-intake
             case 4:
                 ie.setPower(ieP);
-                follower.followPath(l1Pre, true);
+                follower.setMaxPower(1.0);
+                startPath(l1Pre, true);
                 pathState = 5;
                 break;
 
             // Wait until at first pre-intake
             case 5:
                 ie.setPower(ieP);
-                if (!follower.isBusy()) {
+                if (poseDone()) {
                     pathState = 6;
                 }
                 break;
@@ -114,14 +133,16 @@ public class Red_Side_Pedro extends OpMode {
             // Drive through first intake
             case 6:
                 ie.setPower(ieP);
-                follower.followPath(intakeL1, true);
+                follower.setMaxPower(0.75);
+                startPath(intakeL1, true);
                 pathState = 7;
                 break;
 
             // Wait until first intake finishes
             case 7:
                 ie.setPower(ieP);
-                if (!follower.isBusy()) {
+                if (poseDone()) {
+                    follower.setMaxPower(1.0);
                     pathState = 8;
                 }
                 break;
@@ -129,14 +150,15 @@ public class Red_Side_Pedro extends OpMode {
             // Return to score second volley
             case 8:
                 ie.setPower(ieP);
-                follower.followPath(score2, true);
+                follower.setMaxPower(1.0);
+                startPath(score2, true);
                 pathState = 9;
                 break;
 
             // Wait until back at score
             case 9:
                 ie.setPower(ieP);
-                if (!follower.isBusy()) {
+                if (poseDone()) {
                     pathState = 10;
                 }
                 break;
@@ -157,14 +179,15 @@ public class Red_Side_Pedro extends OpMode {
             // Drive to second pre-intake
             case 12:
                 ie.setPower(ieP);
-                follower.followPath(L2Pre, true);
+                follower.setMaxPower(1.0);
+                startPath(L2Pre, true);
                 pathState = 13;
                 break;
 
             // Wait until at second pre-intake
             case 13:
                 ie.setPower(ieP);
-                if (!follower.isBusy()) {
+                if (poseDone()) {
                     pathState = 14;
                 }
                 break;
@@ -172,14 +195,16 @@ public class Red_Side_Pedro extends OpMode {
             // Drive through second intake
             case 14:
                 ie.setPower(ieP);
-                follower.followPath(intakeL2, true);
+                follower.setMaxPower(0.75);
+                startPath(intakeL2, true);
                 pathState = 15;
                 break;
 
             // Wait until second intake finishes
             case 15:
                 ie.setPower(ieP);
-                if (!follower.isBusy()) {
+                if (poseDone()) {
+                    follower.setMaxPower(1.0);
                     pathState = 16;
                 }
                 break;
@@ -187,14 +212,15 @@ public class Red_Side_Pedro extends OpMode {
             // Return to score third volley
             case 16:
                 ie.setPower(ieP);
-                follower.followPath(score3, true);
+                follower.setMaxPower(1.0);
+                startPath(score3, true);
                 pathState = 17;
                 break;
 
             // Wait until back at score
             case 17:
                 ie.setPower(ieP);
-                if (!follower.isBusy()) {
+                if (poseDone()) {
                     pathState = 18;
                 }
                 break;
@@ -215,6 +241,7 @@ public class Red_Side_Pedro extends OpMode {
             // Done
             case 20:
                 ie.setPower(0);
+                follower.setMaxPower(1.0);
                 break;
         }
     }

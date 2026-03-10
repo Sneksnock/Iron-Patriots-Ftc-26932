@@ -53,6 +53,7 @@ public class Far_Side_Pedro_red extends OpMode {
         follower = Constants.createFollower(hardwareMap);
         buildPaths();
         follower.setStartingPose(startPose);
+        follower.setMaxPower(1.0);
     }
 
     @Override
@@ -87,6 +88,7 @@ public class Far_Side_Pedro_red extends OpMode {
 
             // Drive to first score
             case 0:
+                follower.setMaxPower(1.0);
                 startPath(score1, true);
                 pathState = 1;
                 break;
@@ -114,7 +116,7 @@ public class Far_Side_Pedro_red extends OpMode {
             // Drive to first pre-intake
             case 4:
                 ie.setPower(ieP);
-                follower.setMaxPower(0.85);
+                follower.setMaxPower(1.0);
                 startPath(l1Pos, true);
                 pathState = 5;
                 break;
@@ -130,6 +132,7 @@ public class Far_Side_Pedro_red extends OpMode {
             // Drive through first intake
             case 6:
                 ie.setPower(ieP);
+                follower.setMaxPower(0.75);
                 startPath(intakeL12, true);
                 pathState = 7;
                 break;
@@ -146,6 +149,7 @@ public class Far_Side_Pedro_red extends OpMode {
             // Return to score second volley
             case 8:
                 ie.setPower(ieP);
+                follower.setMaxPower(1.0);
                 startPath(score2, true);
                 pathState = 9;
                 break;
@@ -173,6 +177,7 @@ public class Far_Side_Pedro_red extends OpMode {
             // Drive to second pre-intake
             case 12:
                 ie.setPower(ieP);
+                follower.setMaxPower(1.0);
                 startPath(L2Pre, true);
                 pathState = 13;
                 break;
@@ -188,6 +193,7 @@ public class Far_Side_Pedro_red extends OpMode {
             // Drive through second intake
             case 14:
                 ie.setPower(ieP);
+                follower.setMaxPower(0.75);
                 startPath(L2, true);
                 pathState = 15;
                 break;
@@ -196,6 +202,7 @@ public class Far_Side_Pedro_red extends OpMode {
             case 15:
                 ie.setPower(ieP);
                 if (poseDone()) {
+                    follower.setMaxPower(1.0);
                     pathState = 16;
                 }
                 break;
@@ -203,6 +210,7 @@ public class Far_Side_Pedro_red extends OpMode {
             // Return to score third volley
             case 16:
                 ie.setPower(ieP);
+                follower.setMaxPower(1.0);
                 startPath(L2score, true);
                 pathState = 17;
                 break;
