@@ -17,25 +17,56 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 @Autonomous(name = "Red Side", group = "Examples")
 public class Red_Side_Pedro extends OpMode {
 
+    /// ---------- HARDWARE ----------
     private Follower follower;
     private shooter shooter;
+
+    /// ---------- TIMERS ----------
     private Timer opModeTimer, waitTimer;
     private ElapsedTime poseTimer;
 
+    /// ---------- STATE ----------
     private int pathState = 0;
     private static final double POSE_TIMEOUT = 4.0;
 
     /// ---------- POSE DATA ----------
     private final Pose startPose = new Pose(124.311, 123.794, 0.739);
     private final Pose scorePose = new Pose(72, 129.5, 0.17);
-    private final Pose line1PrePose = new Pose(102.5, 86.75, 0.0);
-    private final Pose intakeline1Pose = new Pose(128.0, 81.0, 0.02);
-    private final Pose line2PrePose = new Pose(102.5, 61.5, 0.06);
-    private final Pose intakeline2Pose = new Pose(138, 56.0, 0.01);
+
+    // Line 1
+    private final Pose line1PrePose = new Pose(102.5, 90.5, 0.0);
+    private final Pose intakeLine1Pose = new Pose(128.0, 83.5, 0.02);
+
+    // Line 2
+    private final Pose line2PrePose = new Pose(102.5, 67.5, 0.06);
+    private final Pose intakeLine2Pose = new Pose(138, 61.0, 0.01);
+
+    // Line 3
+    private final Pose line3PrePose = new Pose(108, 45.4, 0);
+    private final Pose intakeLine3Pose = new Pose(137, 34.9, 0);
+
+    // Lever
     private final Pose leverPrePose = new Pose(139, 60, 0.03);
     private final Pose leverPose = new Pose(108, 66, 2.56);
 
-    private PathChain score1, l1Pre, intakeL1, score2, L2Pre, intakeL2, score3, leverPre, lever, leverscore;
+    /// ---------- PATHS ----------
+    private PathChain score1;
+    private PathChain line1PrePath;
+    private PathChain intakeLine1Path;
+    private PathChain score2;
+
+    private PathChain line2PrePath;
+    private PathChain intakeLine2Path;
+    private PathChain line2RetreatPath;
+    private PathChain score3;
+
+    private PathChain line3PrePath;
+    private PathChain intakeLine3Path;
+    private PathChain score4;
+
+    private PathChain leverPrePath;
+    private PathChain leverPath;
+    private PathChain leverScorePath;
 
     @Override
     public void init() {
@@ -63,7 +94,7 @@ public class Red_Side_Pedro extends OpMode {
 
         autonomousPathUpdate();
 
-        /// ----------- TELEMETRY ----------
+        /// ---------- TELEMETRY ----------
         telemetry.addData("Path State", pathState);
         telemetry.addData("Shooter State", shooter.getState());
         telemetry.addData("Follower Busy", follower.isBusy());
@@ -114,33 +145,33 @@ public class Red_Side_Pedro extends OpMode {
                 }
                 break;
 
-            // Drive to first pre-intake
+            // Drive to Line 1 pre-intake
             case 4:
-                ie.setPower(ieP);
+                ie.setVelocity(ieP);
                 follower.setMaxPower(1.0);
-                startPath(l1Pre, true);
+                startPath(line1PrePath, true);
                 pathState = 5;
                 break;
 
-            // Wait until at first pre-intake
+            // Wait until at Line 1 pre-intake
             case 5:
-                ie.setPower(ieP);
+                ie.setVelocity(ieP);
                 if (poseDone()) {
                     pathState = 6;
                 }
                 break;
 
-            // Drive through first intake
+            // Drive through Line 1 intake
             case 6:
-                ie.setPower(ieP);
+                ie.setVelocity(ieP);
                 follower.setMaxPower(0.75);
-                startPath(intakeL1, true);
+                startPath(intakeLine1Path, true);
                 pathState = 7;
                 break;
 
-            // Wait until first intake finishes
+            // Wait until Line 1 intake finishes
             case 7:
-                ie.setPower(ieP);
+                ie.setVelocity(ieP);
                 if (poseDone()) {
                     follower.setMaxPower(1.0);
                     pathState = 8;
@@ -149,7 +180,7 @@ public class Red_Side_Pedro extends OpMode {
 
             // Return to score second volley
             case 8:
-                ie.setPower(ieP);
+                ie.setVelocity(ieP);
                 follower.setMaxPower(1.0);
                 startPath(score2, true);
                 pathState = 9;
@@ -157,7 +188,7 @@ public class Red_Side_Pedro extends OpMode {
 
             // Wait until back at score
             case 9:
-                ie.setPower(ieP);
+                ie.setVelocity(ieP);
                 if (poseDone()) {
                     pathState = 10;
                 }
@@ -176,70 +207,148 @@ public class Red_Side_Pedro extends OpMode {
                 }
                 break;
 
-            // Drive to second pre-intake
+            // Drive to Line 2 pre-intake
             case 12:
-                ie.setPower(ieP);
+                ie.setVelocity(ieP);
                 follower.setMaxPower(1.0);
-                startPath(L2Pre, true);
+                startPath(line2PrePath, true);
                 pathState = 13;
                 break;
 
-            // Wait until at second pre-intake
+            // Wait until at Line 2 pre-intake
             case 13:
-                ie.setPower(ieP);
+                ie.setVelocity(ieP);
                 if (poseDone()) {
                     pathState = 14;
                 }
                 break;
 
-            // Drive through second intake
+            // Drive through Line 2 intake
             case 14:
-                ie.setPower(ieP);
+                ie.setVelocity(ieP);
                 follower.setMaxPower(0.75);
-                startPath(intakeL2, true);
+                startPath(intakeLine2Path, true);
                 pathState = 15;
                 break;
 
-            // Wait until second intake finishes
+            // Wait until Line 2 intake finishes
             case 15:
-                ie.setPower(ieP);
+                ie.setVelocity(ieP);
                 if (poseDone()) {
                     follower.setMaxPower(1.0);
                     pathState = 16;
                 }
                 break;
 
-            // Return to score third volley
+            // Retreat from Line 2 back to pre-pose
             case 16:
-                ie.setPower(ieP);
+                ie.setVelocity(ieP);
                 follower.setMaxPower(1.0);
-                startPath(score3, true);
+                startPath(line2RetreatPath, true);
                 pathState = 17;
                 break;
 
-            // Wait until back at score
+            // Wait until retreat finishes
             case 17:
-                ie.setPower(ieP);
+                ie.setVelocity(ieP);
                 if (poseDone()) {
                     pathState = 18;
                 }
                 break;
 
-            // Shoot third volley
+            // Return to score third volley
             case 18:
-                shooter.shoot();
+                ie.setVelocity(ieP);
+                follower.setMaxPower(1.0);
+                startPath(score3, true);
                 pathState = 19;
                 break;
 
-            // Wait until third volley finishes
+            // Wait until back at score
             case 19:
-                if (shooter.ShotsRemaining <= 0) {
+                ie.setVelocity(ieP);
+                if (poseDone()) {
                     pathState = 20;
                 }
                 break;
 
-            // Done
+            // Shoot third volley
             case 20:
+                shooter.shoot();
+                pathState = 21;
+                break;
+
+            // Wait until third volley finishes
+            case 21:
+                if (shooter.ShotsRemaining <= 0) {
+                    pathState = 22;
+                }
+                break;
+
+            // Drive to Line 3 pre-intake
+            case 22:
+                ie.setVelocity(ieP);
+                follower.setMaxPower(1.0);
+                startPath(line3PrePath, true);
+                pathState = 23;
+                break;
+
+            // Wait until at Line 3 pre-intake
+            case 23:
+                ie.setVelocity(ieP);
+                if (poseDone()) {
+                    pathState = 24;
+                }
+                break;
+
+            // Drive through Line 3 intake
+            case 24:
+                ie.setVelocity(ieP);
+                follower.setMaxPower(0.75);
+                startPath(intakeLine3Path, true);
+                pathState = 25;
+                break;
+
+            // Wait until Line 3 intake finishes
+            case 25:
+                ie.setVelocity(ieP);
+                if (poseDone()) {
+                    follower.setMaxPower(1.0);
+                    pathState = 26;
+                }
+                break;
+
+            // Return to score fourth volley
+            case 26:
+                ie.setVelocity(ieP);
+                follower.setMaxPower(1.0);
+                startPath(score4, true);
+                pathState = 27;
+                break;
+
+            // Wait until back at score
+            case 27:
+                ie.setVelocity(ieP);
+                if (poseDone()) {
+                    pathState = 28;
+                }
+                break;
+
+            // Shoot fourth volley
+            case 28:
+                shooter.shoot();
+                pathState = 29;
+                break;
+
+            // Wait until fourth volley finishes
+            case 29:
+                if (shooter.ShotsRemaining <= 0) {
+                    pathState = 30;
+                }
+                break;
+
+            // Done
+            case 30:
                 ie.setPower(0);
                 follower.setMaxPower(1.0);
                 break;
@@ -247,52 +356,78 @@ public class Red_Side_Pedro extends OpMode {
     }
 
     public void buildPaths() {
+
+        /// ---------- SCORE PATH ----------
         score1 = follower.pathBuilder()
                 .addPath(new BezierLine(startPose, scorePose))
                 .setLinearHeadingInterpolation(startPose.getHeading(), scorePose.getHeading())
                 .build();
 
-        l1Pre = follower.pathBuilder()
+        /// ---------- LINE 1 PATHING ----------
+        line1PrePath = follower.pathBuilder()
                 .addPath(new BezierLine(scorePose, line1PrePose))
                 .setLinearHeadingInterpolation(scorePose.getHeading(), line1PrePose.getHeading())
                 .build();
 
-        intakeL1 = follower.pathBuilder()
-                .addPath(new BezierLine(line1PrePose, intakeline1Pose))
-                .setLinearHeadingInterpolation(line1PrePose.getHeading(), intakeline1Pose.getHeading())
+        intakeLine1Path = follower.pathBuilder()
+                .addPath(new BezierLine(line1PrePose, intakeLine1Pose))
+                .setLinearHeadingInterpolation(line1PrePose.getHeading(), intakeLine1Pose.getHeading())
                 .build();
 
         score2 = follower.pathBuilder()
-                .addPath(new BezierLine(intakeline1Pose, scorePose))
-                .setLinearHeadingInterpolation(intakeline1Pose.getHeading(), scorePose.getHeading())
+                .addPath(new BezierLine(intakeLine1Pose, scorePose))
+                .setLinearHeadingInterpolation(intakeLine1Pose.getHeading(), scorePose.getHeading())
                 .build();
 
-        L2Pre = follower.pathBuilder()
+        /// ---------- LINE 2 PATHING ----------
+        line2PrePath = follower.pathBuilder()
                 .addPath(new BezierLine(scorePose, line2PrePose))
                 .setLinearHeadingInterpolation(scorePose.getHeading(), line2PrePose.getHeading())
                 .build();
 
-        intakeL2 = follower.pathBuilder()
-                .addPath(new BezierLine(line2PrePose, intakeline2Pose))
-                .setLinearHeadingInterpolation(line2PrePose.getHeading(), intakeline2Pose.getHeading())
+        intakeLine2Path = follower.pathBuilder()
+                .addPath(new BezierLine(line2PrePose, intakeLine2Pose))
+                .setLinearHeadingInterpolation(line2PrePose.getHeading(), intakeLine2Pose.getHeading())
+                .build();
+
+        line2RetreatPath = follower.pathBuilder()
+                .addPath(new BezierLine(intakeLine2Pose, line2PrePose))
+                .setLinearHeadingInterpolation(intakeLine2Pose.getHeading(), line2PrePose.getHeading())
                 .build();
 
         score3 = follower.pathBuilder()
-                .addPath(new BezierLine(intakeline2Pose, scorePose))
-                .setLinearHeadingInterpolation(intakeline2Pose.getHeading(), scorePose.getHeading())
+                .addPath(new BezierLine(line2PrePose, scorePose))
+                .setLinearHeadingInterpolation(line2PrePose.getHeading(), scorePose.getHeading())
                 .build();
 
-        leverPre = follower.pathBuilder()
+        /// ---------- LINE 3 PATHING ----------
+        line3PrePath = follower.pathBuilder()
+                .addPath(new BezierLine(scorePose, line3PrePose))
+                .setLinearHeadingInterpolation(scorePose.getHeading(), line3PrePose.getHeading())
+                .build();
+
+        intakeLine3Path = follower.pathBuilder()
+                .addPath(new BezierLine(line3PrePose, intakeLine3Pose))
+                .setLinearHeadingInterpolation(line3PrePose.getHeading(), intakeLine3Pose.getHeading())
+                .build();
+
+        score4 = follower.pathBuilder()
+                .addPath(new BezierLine(intakeLine3Pose, scorePose))
+                .setLinearHeadingInterpolation(intakeLine3Pose.getHeading(), scorePose.getHeading())
+                .build();
+
+        /// ---------- LEVER PATHING ----------
+        leverPrePath = follower.pathBuilder()
                 .addPath(new BezierLine(scorePose, leverPrePose))
                 .setLinearHeadingInterpolation(scorePose.getHeading(), leverPrePose.getHeading())
                 .build();
 
-        lever = follower.pathBuilder()
+        leverPath = follower.pathBuilder()
                 .addPath(new BezierLine(leverPrePose, leverPose))
                 .setLinearHeadingInterpolation(leverPrePose.getHeading(), leverPose.getHeading())
                 .build();
 
-        leverscore = follower.pathBuilder()
+        leverScorePath = follower.pathBuilder()
                 .addPath(new BezierLine(leverPose, scorePose))
                 .setLinearHeadingInterpolation(leverPose.getHeading(), scorePose.getHeading())
                 .build();

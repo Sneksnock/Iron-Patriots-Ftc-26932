@@ -12,7 +12,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 public class shooter {
 
     /// ---------- HARDWARE ----------
-    public static CRServo Lfeeder, Rfeeder;
+    public static CRServo Lfeeder, Rfeeder;//lift;
     public static DcMotorEx Lsh, Rsh;
     private static DcMotorEx Lf;
     private static DcMotorEx Rf;
@@ -21,6 +21,8 @@ public class shooter {
     public static DcMotorEx ie;
     public static Servo ll;
     public static Servo lr;
+    public static Servo lift;
+
 
     private final ElapsedTime stateTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
@@ -28,10 +30,8 @@ public class shooter {
     public enum ShootingState {
         IDLE,
         SPIN_UP,
-        LAUNCH1,
-        LAUNCH2,
-        LAUNCH3,
-        LAUNCH4
+        FEED_ON,
+        FEED_OFF
     }
 
     public enum ShotMode {
@@ -47,11 +47,14 @@ public class shooter {
     /// ---------- FEEDER / INTAKE ----------
     public static double LfeederP = 1.0;
     public static double RfeederP = 1.0;
-    public static double LfeederT = 500;
-    public static double RfeederT = 500;
-    public static double ieP = 0.80;
-    public static double off = -0.2;
+    public static double ieP = 870;
+    public static double off = -1.0;
     public static double offW = 0.0;
+    ///--------- KICKSTAND ----------
+    public static double upP  = 1.0; // place holder
+    /// ---------- BURST TIMING ----------
+    public static double FEED_TIME = 575;   // both feeders on
+    public static double GAP_TIME = 0;    // pause between bursts
 
     /// ---------- PIDF ----------
     public static double F = 14;
@@ -67,12 +70,15 @@ public class shooter {
     public static double VELOCITY_TOLERANCE = 20;
     public static double SPIN_TIME = 600;
     public static double SPIN_TIMEFAR = 2000;
+    public static double IDLE_VELOCITY = 900;
+    public static boolean HOLD_IDLE_SPEED = true;
 
     /// ---------- TODO: SMART SHOT ----------
-    /// This gets used later for Limelight / distance-based shooting
     private double customVelocity = CLOSE_VELOCITY;
     private double customSpinTime = SPIN_TIME;
 
+    /// ---------- SHOT COUNT ----------
+    /// Now counts BURSTS, not alternating feeder events.
     public int ShotsRemaining = 0;
 
     public static void init(HardwareMap hwMap) {
@@ -88,7 +94,8 @@ public class shooter {
         Rb = hwMap.get(DcMotorEx.class, "right_back_drive");
         ll = hwMap.get(Servo.class, "light_left");
         lr = hwMap.get(Servo.class, "light_right");
-
+       // lift = hwMap.get(CRServo.class, "lift");
+        lift = hwMap.get(Servo.class, "lift");
         ie.setDirection(DcMotorSimple.Direction.REVERSE);
         Lf.setDirection(DcMotorSimple.Direction.REVERSE);
         Lb.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -141,20 +148,95 @@ public class shooter {
     }
 
     /// ---------- TODO: SMART SHOT ----------
-    /// use this later when Limelight / distance mapping is ready
     public void requestVelocityShot(double targetVelocity) {
         if (!isBusy()) {
             ShotsRemaining = 4;
             shotMode = ShotMode.CUSTOM;
             customVelocity = targetVelocity;
 
-            /// simple default rule for now
             if (targetVelocity >= FAR_VELOCITY - 25) {
                 customSpinTime = SPIN_TIMEFAR;
             } else {
                 customSpinTime = SPIN_TIME;
             }
 
+            stateTimer.reset();
+        }
+    }
+    /// ---------- VISION SHOT SUPPORT ----------
+    private boolean useVisionVelocity = false;
+    private double visionVelocity = CLOSE_VELOCITY;
+
+    public void setVisionVelocity(double targetVelocity) {
+        visionVelocity = targetVelocity;
+    }
+
+    public double getVisionVelocity() {
+        return visionVelocity;
+    }
+
+    public void enableVisionVelocity(boolean enabled) {
+        useVisionVelocity = enabled;
+    }
+
+    public boolean isUsingVisionVelocity() {
+        return useVisionVelocity;
+    }
+
+    public void requestVisionShot() {
+        if (!isBusy()) {
+            ShotsRemaining = 4;
+            shotMode = ShotMode.CUSTOM;
+            customVelocity = visionVelocity;
+
+            if (customVelocity >= FAR_VELOCITY - 25) {
+                customSpinTime = SPIN_TIMEFAR;
+            } else {
+                customSpinTime = SPIN_TIME;
+            }
+
+            stateTimer.reset();
+        }
+    }
+
+    public void requestVisionShot(int burstCount) {
+        if (!isBusy()) {
+            ShotsRemaining = burstCount;
+            shotMode = ShotMode.CUSTOM;
+            customVelocity = visionVelocity;
+
+            if (customVelocity >= FAR_VELOCITY - 25) {
+                customSpinTime = SPIN_TIMEFAR;
+            } else {
+                customSpinTime = SPIN_TIME;
+            }
+
+            stateTimer.reset();
+        }
+    }
+    /// ---------- BURST COUNT ----------
+    public void requestCloseShot(int burstCount) {
+        if (!isBusy()) {
+            ShotsRemaining = burstCount;
+            shotMode = ShotMode.CLOSE;
+            stateTimer.reset();
+        }
+    }
+
+    public void requestFarShot(int burstCount) {
+        if (!isBusy()) {
+            ShotsRemaining = burstCount;
+            shotMode = ShotMode.FAR;
+            stateTimer.reset();
+        }
+    }
+
+    public void requestVelocityShot(double targetVelocity, int burstCount) {
+        if (!isBusy()) {
+            ShotsRemaining = burstCount;
+            shotMode = ShotMode.CUSTOM;
+            customVelocity = targetVelocity;
+            customSpinTime = (targetVelocity >= FAR_VELOCITY - 25) ? SPIN_TIMEFAR : SPIN_TIME;
             stateTimer.reset();
         }
     }
@@ -176,12 +258,19 @@ public class shooter {
     public boolean isBusy() {
         return shootingState != ShootingState.IDLE || shotMode != ShotMode.NONE || ShotsRemaining > 0;
     }
-
+    public void idleSpeed() {
+        if (!isBusy()) {
+            Lsh.setVelocity(IDLE_VELOCITY);
+            Rsh.setVelocity(IDLE_VELOCITY);
+        }
+    }
     public void cancelShot() {
         Lsh.setPower(0.0);
         Rsh.setPower(0.0);
         Lfeeder.setPower(0.0);
         Rfeeder.setPower(0.0);
+        ie.setPower(0.0);
+
         ShotsRemaining = 0;
         shootingState = ShootingState.IDLE;
         shotMode = ShotMode.NONE;
@@ -192,13 +281,19 @@ public class shooter {
         switch (shotMode) {
             case FAR:
                 return FAR_VELOCITY;
+
             case CUSTOM:
                 return customVelocity;
+
             case CLOSE:
             default:
+                if (useVisionVelocity) {
+                    return visionVelocity;
+                }
                 return CLOSE_VELOCITY;
         }
     }
+
 
     public double getTargetSpinTime() {
         switch (shotMode) {
@@ -221,8 +316,14 @@ public class shooter {
         Rfeeder.setPower(power);
     }
 
+    public void setBothFeedersManual(double power) {
+        Lfeeder.setPower(power);
+        Rfeeder.setPower(power);
+    }
+
     /// ---------- UPDATE ----------
     public void update() {
+
         updateLights();
 
         double targetVelocity = getTargetVelocity();
@@ -234,69 +335,96 @@ public class shooter {
         switch (shootingState) {
 
             case IDLE:
+
                 Lfeeder.setPower(off);
                 Rfeeder.setPower(off);
 
                 if (shotMode != ShotMode.NONE && ShotsRemaining > 0) {
-                    ie.setPower(ieP);
+
+                    ie.setVelocity(ieP);
+
                     Lsh.setVelocity(targetVelocity);
                     Rsh.setVelocity(targetVelocity);
 
                     stateTimer.reset();
                     shootingState = ShootingState.SPIN_UP;
                 }
+                else {
+
+                    if (HOLD_IDLE_SPEED) {
+                        Lsh.setVelocity(IDLE_VELOCITY);
+                        Rsh.setVelocity(IDLE_VELOCITY);
+                    }
+                    else {
+                        Lsh.setPower(0.0);
+                        Rsh.setPower(0.0);
+                    }
+
+                    ie.setPower(0.0);
+                }
+
                 break;
+
 
             case SPIN_UP:
+
                 if (atSpeed || stateTimer.milliseconds() >= getTargetSpinTime()) {
-                    ie.setPower(ieP);
+
+                    ie.setVelocity(ieP);
+
                     Lfeeder.setPower(LfeederP);
-                    stateTimer.reset();
-                    shootingState = ShootingState.LAUNCH1;
-                }
-                break;
-
-            case LAUNCH1:
-                if (stateTimer.milliseconds() >= LfeederT) {
-                    Lfeeder.setPower(0.0);
                     Rfeeder.setPower(RfeederP);
+
                     stateTimer.reset();
-                    ShotsRemaining--;
-                    shootingState = ShootingState.LAUNCH2;
+                    shootingState = ShootingState.FEED_ON;
                 }
+
                 break;
 
-            case LAUNCH2:
-                if (stateTimer.milliseconds() >= RfeederT) {
+
+            case FEED_ON:
+
+                if (stateTimer.milliseconds() >= FEED_TIME) {
+
+                    Lfeeder.setPower(0.0);
                     Rfeeder.setPower(0.0);
+
+                    ShotsRemaining--;
+
+                    stateTimer.reset();
+
+                    if (ShotsRemaining > 0) {
+                        shootingState = ShootingState.FEED_OFF;
+                    }
+                    else {
+
+                        shootingState = ShootingState.IDLE;
+                        shotMode = ShotMode.NONE;
+
+                    }
+
+                }
+
+                break;
+
+
+            case FEED_OFF:
+
+                if (stateTimer.milliseconds() >= GAP_TIME) {
+
                     Lfeeder.setPower(LfeederP);
-                    stateTimer.reset();
-                    ShotsRemaining--;
-                    shootingState = ShootingState.LAUNCH3;
-                }
-                break;
-
-            case LAUNCH3:
-                if (stateTimer.milliseconds() >= LfeederT) {
-                    Lfeeder.setPower(0.0);
                     Rfeeder.setPower(RfeederP);
+
                     stateTimer.reset();
-                    ShotsRemaining--;
-                    shootingState = ShootingState.LAUNCH4;
+
+                    shootingState = ShootingState.FEED_ON;
+
                 }
+
                 break;
 
-            case LAUNCH4:
-                if (stateTimer.milliseconds() >= RfeederT) {
-                    Rfeeder.setPower(0.0);
-                    stateTimer.reset();
-                    ShotsRemaining--;
-
-                    /// return to idle cleanly
-                    shootingState = ShootingState.IDLE;
-                    shotMode = ShotMode.NONE;
-                }
-                break;
         }
+
     }
-}
+
+    }

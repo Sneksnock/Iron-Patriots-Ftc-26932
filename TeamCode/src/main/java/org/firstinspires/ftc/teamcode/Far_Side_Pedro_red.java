@@ -27,7 +27,7 @@ public class Far_Side_Pedro_red extends OpMode {
 
     /// ---------- POSE DATA ----------
     private Pose startPose = new Pose(104, 4.5, 1.6);
-    private Pose scorePose = new Pose(85, 15, 1.15);
+    private Pose scorePose = new Pose(85, 15, 1.10);
     private Pose line1PrePose = new Pose(108, 28, 0);
     private Pose intake2Pose = new Pose(27, 57.5, 3.07);
     private Pose intake3OutsidePose = new Pose(137, 42, 0);
