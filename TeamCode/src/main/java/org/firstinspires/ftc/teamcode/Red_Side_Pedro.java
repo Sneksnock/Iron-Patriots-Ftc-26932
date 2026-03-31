@@ -31,7 +31,7 @@ public class Red_Side_Pedro extends OpMode {
 
     /// ---------- POSE DATA ----------
     private final Pose startPose = new Pose(124.311, 123.794, 0.739);
-    private final Pose scorePose = new Pose(72, 129.5, 0.17);
+    private final Pose scorePose = new Pose(86, 129.5, 0.17);
 
     // Line 1
     private final Pose line1PrePose = new Pose(102.5, 90.5, 0.0);
@@ -42,7 +42,7 @@ public class Red_Side_Pedro extends OpMode {
     private final Pose intakeLine2Pose = new Pose(138, 61.0, 0.01);
 
     // Line 3
-    private final Pose line3PrePose = new Pose(108, 45.4, 0);
+    private final Pose line3PrePose = new Pose(105, 45.4, 0);
     private final Pose intakeLine3Pose = new Pose(137, 34.9, 0);
 
     // Lever

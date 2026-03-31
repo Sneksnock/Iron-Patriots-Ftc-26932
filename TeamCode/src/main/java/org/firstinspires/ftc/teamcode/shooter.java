@@ -65,7 +65,7 @@ public class shooter {
     public static double green = 0.5;
 
     /// ---------- SHOOTER ----------
-    public static double CLOSE_VELOCITY = 1110;
+    public static double CLOSE_VELOCITY = 1050;
     public static double FAR_VELOCITY = 1425;
     public static double VELOCITY_TOLERANCE = 20;
     public static double SPIN_TIME = 600;
@@ -113,8 +113,8 @@ public class shooter {
         shotMode = ShotMode.NONE;
 
         ie.setPower(0);
-        Lfeeder.setPower(off);
-        Rfeeder.setPower(off);
+        Lfeeder.setPower(0);
+        Rfeeder.setPower(0);
         ll.setPosition(red);
         lr.setPosition(red);
     }
@@ -269,7 +269,7 @@ public class shooter {
         Rsh.setPower(0.0);
         Lfeeder.setPower(0.0);
         Rfeeder.setPower(0.0);
-        ie.setPower(0.0);
+        ie.setPower(-1.0);
 
         ShotsRemaining = 0;
         shootingState = ShootingState.IDLE;

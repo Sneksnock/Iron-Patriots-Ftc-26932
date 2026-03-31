@@ -38,7 +38,8 @@ public class Blue_Teleop extends LinearOpMode {
     private boolean lastY = false;
     private boolean slowModeToggle = false;
     private boolean slowMode = false;
-
+    private boolean lastLeftBumper = false;
+    private boolean lastRightBumper = false;
     private boolean lastLeftTriggerPressed = false;
     private boolean lastOptionsPressed = false;
     private boolean lastAPressed = false;
@@ -284,18 +285,20 @@ public class Blue_Teleop extends LinearOpMode {
             intakeReverseToggle = false;
         }
 
-        if (!shooter.isBusy()) {
-            if (gamepad1.left_bumper) {
-                shooter.setLeftFeederManual(1.0);
-            } else {
-                shooter.setLeftFeederManual(0.0);
-            }
+        boolean leftBumperPressed = gamepad1.left_bumper;
+        boolean rightBumperPressed = gamepad1.right_bumper;
 
-    /*       if (gamepad1.yWasPressed()) {
-              lift.setPower(0.0);
-           } else if (gamepad1.yWasPressed()){
-            lift.setPower(-1.0);
-         } */
+        if (leftBumperPressed && !lastLeftBumper && !shooter.isBusy()) {
+            shooter.requestCloseShot();
+        }
+
+        if (rightBumperPressed && !lastRightBumper && !shooter.isBusy()) {
+            shooter.requestFarShot();
+        }
+
+        lastLeftBumper = leftBumperPressed;
+        lastRightBumper = rightBumperPressed;
+
 
             boolean yPressed = gamepad1.y;
 
@@ -316,7 +319,7 @@ public class Blue_Teleop extends LinearOpMode {
             } else {
                 shooter.setRightFeederManual(0.0);
             } */
-        }
+
     }
 
 
