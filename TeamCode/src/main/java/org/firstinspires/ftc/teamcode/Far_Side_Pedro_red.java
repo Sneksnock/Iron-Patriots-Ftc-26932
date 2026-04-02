@@ -13,6 +13,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+import org.firstinspires.ftc.teamcode.pedroPathing.MatchPoseMemory;
 
 @Autonomous(name = "RED Far Side", group = "Examples")
 public class Far_Side_Pedro_red extends OpMode {
@@ -60,7 +61,7 @@ public class Far_Side_Pedro_red extends OpMode {
     public void loop() {
         follower.update();
         shooter.update();
-
+        MatchPoseMemory.save(follower.getPose());
         autonomousPathUpdate();
 
         /// ----------- TELEMETRY ----------

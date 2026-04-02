@@ -37,8 +37,8 @@ public class LimelightShooterMechanism {
 
     // velocity = TA_SLOPE * ta + TA_INTERCEPT
     public static boolean USE_TA_TO_VELOCITY = true;
-    public static double TA_SLOPE = -146.38023;
-    public static double TA_INTERCEPT = 1326.457;
+    public static double TA_SLOPE = -165;   // was -146 → steeper
+    public static double TA_INTERCEPT = 1250; // was 1326 → lower
 
     // ---------- PIDF TUNING ----------
     public static double SHOOTER_P = 400;
